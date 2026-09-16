@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
 
     const savedFiles: { originalName: string; storagePath: string; mimeType: string; fileSize: number }[] = [];
 
-    // Save each file (Vercel Blob in cloud or local disk in dev)
+    // Save each file (Vercel Blob in cloud or local/tmp disk in dev)
     for (const file of files) {
       const { storagePath } = await saveFile(file);
       savedFiles.push({
@@ -69,8 +69,9 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ success: true, token: submission.token, id: submission.id });
-  } catch (err) {
-    console.error("Submit error:", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (err: unknown) {
+    console.error("Submit error details:", err);
+    const message = err instanceof Error ? err.message : "Internal server error";
+    return NextResponse.json({ error: `Upload error: ${message}` }, { status: 500 });
   }
 }

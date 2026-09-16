@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getLocalUploadsDir } from "@/lib/storage";
 import { readFile } from "fs/promises";
 import path from "path";
 
@@ -18,8 +19,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     return NextResponse.redirect(file.storagePath);
   }
 
-  // If stored locally on disk
-  const filePath = path.join(process.cwd(), "uploads", file.storagePath);
+  // If stored locally or in /tmp
+  const uploadsDir = getLocalUploadsDir();
+  const filePath = path.join(uploadsDir, file.storagePath);
 
   try {
     const buffer = await readFile(filePath);

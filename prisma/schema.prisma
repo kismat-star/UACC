@@ -1,3 +1,7 @@
+// QR File Collector — Prisma schema
+// Admin generates a QR for a "Session". Students scan & upload image/PDF.
+// Admin downloads / prints / deletes files. Auto-delete supported.
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,38 +11,33 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Admin {
-  id           String   @id @default(cuid())
-  name         String
-  email        String   @unique
-  passwordHash String
-  createdAt    DateTime @default(now())
-}
-
-model Submission {
-  id          String   @id @default(cuid())
-  token       String   @unique
-  studentName String
-  status      String   @default("SUBMITTED")
-  rejectionReason String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  completedAt DateTime?
-  files       File[]
+model Session {
+  id        String   @id @default(cuid())
+  name      String
+  code      String   @unique // short code embedded in the QR url (?upload=CODE)
+  createdAt DateTime @default(now())
+  closed    Boolean  @default(false) // closed sessions stop accepting uploads
+  files     File[]
 }
 
 model File {
-  id           String     @id @default(cuid())
-  submissionId String
-  submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
-  originalName String
-  storagePath  String
-  mimeType     String
-  fileSize     Int
-  createdAt    DateTime   @default(now())
+  id          String    @id @default(cuid())
+  sessionId   String
+  session     Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  filename    String // original file name from student
+  storedName  String // unique name on disk (inside uploads/)
+  mimeType    String
+  size        Int // bytes
+  fileType    String // "image" | "pdf"
+  studentName String? // optional label from student
+  createdAt   DateTime  @default(now())
+  printedAt   DateTime?
+  printed     Boolean   @default(false)
+  expiresAt   DateTime? // when set, file auto-deletes after this time
 }
 
+// Simple key/value store for admin settings (singleton rows keyed by id).
 model Setting {
-  key   String @id
+  id    String @id
   value String
 }

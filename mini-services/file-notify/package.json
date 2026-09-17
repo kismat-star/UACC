@@ -1,0 +1,14 @@
+{
+  "name": "file-notify-service",
+  "version": "1.0.0",
+  "description": "WebSocket mini-service for the QR File Collector app. Broadcasts file/session events to admin clients over socket.io (port 3003).",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun --hot index.ts",
+    "start": "bun index.ts"
+  },
+  "dependencies": {
+    "socket.io": "^4.8.3"
+  }
+}

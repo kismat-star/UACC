@@ -30,36 +30,48 @@ async function generateUniqueCode(): Promise<string> {
 }
 
 export async function GET() {
-  const sessions = await db.session.findMany({
-    orderBy: { createdAt: "desc" },
-    include: { _count: { select: { files: true } } },
-  });
-  const shapes: SessionShape[] = sessions.map((s) => toSessionShape(s));
-  return NextResponse.json({ sessions: shapes });
+  try {
+    const sessions = await db.session.findMany({
+      orderBy: { createdAt: "desc" },
+      include: { _count: { select: { files: true } } },
+    });
+    const shapes: SessionShape[] = sessions.map((s) => toSessionShape(s));
+    return NextResponse.json({ sessions: shapes });
+  } catch (err: unknown) {
+    console.error("[api/sessions] GET error:", err);
+    const message = err instanceof Error ? err.message : "Failed to load sessions";
+    return NextResponse.json({ error: message, sessions: [] }, { status: 500 });
+  }
 }
 
 export async function POST(req: Request) {
-  let body: { name?: unknown } = {};
   try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    let body: { name?: unknown } = {};
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    }
+
+    const name = typeof body.name === "string" ? body.name.trim() : "";
+    if (!name) {
+      return NextResponse.json({ error: "name is required" }, { status: 400 });
+    }
+
+    const code = await generateUniqueCode();
+    const session = await db.session.create({
+      data: { name, code },
+      include: { _count: { select: { files: true } } },
+    });
+    const shape = toSessionShape(session);
+
+    // Best-effort notify; do not block response on it.
+    void notify("session-updated", { session: shape });
+
+    return NextResponse.json({ session: shape }, { status: 201 });
+  } catch (err: unknown) {
+    console.error("[api/sessions] POST error:", err);
+    const message = err instanceof Error ? err.message : "Failed to create session";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-
-  const name = typeof body.name === "string" ? body.name.trim() : "";
-  if (!name) {
-    return NextResponse.json({ error: "name is required" }, { status: 400 });
-  }
-
-  const code = await generateUniqueCode();
-  const session = await db.session.create({
-    data: { name, code },
-    include: { _count: { select: { files: true } } },
-  });
-  const shape = toSessionShape(session);
-
-  // Best-effort notify; do not block response on it.
-  void notify("session-updated", { session: shape });
-
-  return NextResponse.json({ session: shape }, { status: 201 });
 }

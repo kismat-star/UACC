@@ -104,10 +104,13 @@ export async function GET(
 <body>
   <button class="print-btn no-print" onclick="window.print()">🖨 Print this poster</button>
   <div class="poster">
-    <span class="badge"><span class="dot"></span> Scan &amp; Submit</span>
-    <div>
-      <h1>${escapeHtml(session.name)}</h1>
-      <p class="sub">Open your phone camera, scan the QR, and upload your image or PDF.</p>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <img src="/logo.png" alt="Logo" style="width:72px;height:72px;object-fit:contain;border-radius:50%;background:#fff;" />
+      <div>
+        <div class="badge" style="margin-bottom:6px;"><span class="dot"></span> Scan &amp; Print</div>
+        <h1 style="font-size:28px;">Umiya Arts &amp; Commerce College</h1>
+        <p class="sub" style="margin-top:2px;">Shree Umiya K.V.C. Education Trust · ${escapeHtml(session.name)}</p>
+      </div>
     </div>
     <div class="grid">
       <div class="qr">${qrSvg}</div>

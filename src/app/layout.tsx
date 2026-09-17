@@ -14,12 +14,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "QR File Collector",
-  description: "Admin shows a QR, students scan & upload images/PDFs, admin downloads, prints & auto-deletes.",
-  keywords: ["QR", "file upload", "classroom", "assignment", "print", "Next.js"],
-  authors: [{ name: "Z.ai" }],
+  title: "Umiya Arts & Commerce College — Print Desk",
+  description: "Shree Umiya K.V.C. Education Trust — Scan & Upload documents for printing.",
+  keywords: ["Umiya College", "print desk", "QR upload", "student print"],
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: "/logo.png",
   },
 };
 

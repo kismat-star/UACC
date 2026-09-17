@@ -504,20 +504,22 @@ function Shell({
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-b from-emerald-50/40 via-background to-background">
       <header className="border-b bg-background/80 backdrop-blur">
-        <div className="mx-auto flex max-w-xl items-center gap-2.5 px-4 py-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-sm">
-            <ScanLine className="h-4 w-4" />
-          </div>
+        <div className="mx-auto flex max-w-xl items-center gap-3 px-4 py-3">
+          <img
+            src="/logo.png"
+            alt="Umiya College Logo"
+            className="h-11 w-11 object-contain drop-shadow-sm rounded-full bg-white p-0.5"
+          />
           <div className="min-w-0 flex-1 leading-tight">
-            <h1 className="truncate text-sm font-semibold">
-              {sessionName || "Upload your file"}
+            <h1 className="truncate text-sm font-bold text-foreground">
+              Umiya Arts &amp; Commerce College
             </h1>
-            <p className="text-[11px] text-muted-foreground">
-              {sessionName ? "Scan & Submit" : "QR File Collector"}
+            <p className="text-[11px] font-medium text-emerald-600">
+              {sessionName || "Student Print Desk"}
             </p>
           </div>
-          <Badge variant="outline" className="border-emerald-300 text-emerald-700">
-            Student
+          <Badge variant="outline" className="border-emerald-300 text-emerald-700 bg-emerald-50/60 font-semibold">
+            Upload
           </Badge>
         </div>
       </header>

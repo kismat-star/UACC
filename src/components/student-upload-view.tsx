@@ -48,35 +48,69 @@ export function StudentUploadView({ code }: { code: string }) {
   const [loadState, setLoadState] = useState<"loading" | "ok" | "error">(
     "loading",
   );
+  const [studentName, setStudentName] = useState("");
+  const [pending, setPending] = useState<PendingFile[]>([]);
+  const [dragging, setDragging] = useState(false);
+  const [allDone, setAllDone] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const lastBeepedIds = useRef<Set<string>>(new Set());
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
+  const initAudio = () => {
+    try {
+      if (!audioCtxRef.current && typeof window !== "undefined") {
+        const AudioContextClass =
+          window.AudioContext ||
+          (window as unknown as { webkitAudioContext: typeof AudioContext })
+            .webkitAudioContext;
+        if (AudioContextClass) {
+          audioCtxRef.current = new AudioContextClass();
+        }
+      }
+      if (audioCtxRef.current && audioCtxRef.current.state === "suspended") {
+        audioCtxRef.current.resume().catch(() => {});
+      }
+    } catch {
+      // Audio context not allowed or not supported
+    }
+  };
 
   const playBeep = () => {
     try {
-      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const oscillator = audioCtx.createOscillator();
-      const gainNode = audioCtx.createGain();
-      oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(440, audioCtx.currentTime); // A4
-      oscillator.connect(gainNode);
-      gainNode.connect(audioCtx.destination);
-      gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-      oscillator.start();
-      oscillator.stop(audioCtx.currentTime + 0.1);
-    } catch (e) {
-      // ignore audio errors
+      initAudio();
+      const ctx = audioCtxRef.current;
+      if (!ctx) return;
+
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(600, ctx.currentTime);
+
+      gain.gain.setValueAtTime(0.4, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.18);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.18);
+    } catch {
+      // Audio policy
     }
   };
 
   // Play beep when a file finishes uploading
   useEffect(() => {
     pending.forEach((p) => {
-      if (p.status === 'done' && !lastBeepedIds.current.has(p.id)) {
+      if (p.status === "done" && !lastBeepedIds.current.has(p.id)) {
         playBeep();
         lastBeepedIds.current.add(p.id);
       }
     });
   }, [pending]);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   // Remember the student's name across uploads on the same device.
   useEffect(() => {
@@ -181,6 +215,7 @@ export function StudentUploadView({ code }: { code: string }) {
   );
 
   const uploadAll = async () => {
+    initAudio();
     const toUpload = pending.filter((p) => p.status === "pending");
     if (toUpload.length === 0) return;
     // Upload sequentially to keep things simple & predictable on mobile networks.
@@ -299,7 +334,10 @@ export function StudentUploadView({ code }: { code: string }) {
         <div className="flex flex-col gap-2 sm:flex-row">
           <Button
             type="button"
-            onClick={() => cameraInputRef.current?.click()}
+            onClick={() => {
+              initAudio();
+              cameraInputRef.current?.click();
+            }}
             disabled={closed}
             className="bg-emerald-600 text-white hover:bg-emerald-700"
           >
@@ -309,7 +347,10 @@ export function StudentUploadView({ code }: { code: string }) {
           <Button
             type="button"
             variant="outline"
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => {
+              initAudio();
+              fileInputRef.current?.click();
+            }}
             disabled={closed}
           >
             <ArrowUpFromLine className="mr-2 h-4 w-4" />

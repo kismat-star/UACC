@@ -27,7 +27,6 @@ import {
   WifiOff,
   FolderOpen,
   Search,
-  FileArchive,
   Layers,
   Users,
   DownloadCloud,
@@ -94,7 +93,6 @@ import {
   printPosterUrl,
   printUrl,
   runCleanup,
-  sessionZipUrl,
   updateSession,
   updateSettings,
 } from "@/lib/api";
@@ -1508,17 +1506,7 @@ export function AdminDashboard() {
               </ScrollArea>
             )}
 
-            {/* Session-level ZIP download (all files) */}
-            {activeId && files.length > 0 && !selectMode && (
-              <div className="flex justify-end">
-                <Button variant="ghost" size="sm" asChild>
-                  <a href={sessionZipUrl(activeId)} download>
-                    <FileArchive className="mr-1.5 h-3.5 w-3.5" />
-                    Download all as ZIP
-                  </a>
-                </Button>
-              </div>
-            )}
+
           </div>
         </div>
       </main>

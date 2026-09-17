@@ -96,10 +96,6 @@ export function printAllUrl(ids: string[]): string {
   return `/api/print-all?ids=${ids.map(encodeURIComponent).join(",")}`;
 }
 
-export function sessionZipUrl(sessionId: string): string {
-  return `/api/sessions/${sessionId}/zip`;
-}
-
 /* ---------- Upload (student) ---------- */
 
 export async function uploadFile(

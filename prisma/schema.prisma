@@ -29,6 +29,7 @@ model File {
   mimeType    String
   size        Int // bytes
   fileType    String // "image" | "pdf"
+  pageCount   Int?   @default(1)
   studentName String? // optional label from student
   createdAt   DateTime  @default(now())
   printedAt   DateTime?

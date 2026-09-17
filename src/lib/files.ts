@@ -52,12 +52,15 @@ export function fileTypeFromMime(mimeType: string): FileType {
   return isImage(mimeType) ? "image" : "pdf";
 }
 
+import { PDFDocument } from "pdf-lib";
+
 export interface SavedUpload {
   storedName: string;
   filename: string;
   mimeType: string;
   size: number;
   fileType: FileType;
+  pageCount: number;
 }
 
 export async function saveUpload(file: File): Promise<SavedUpload> {
@@ -78,9 +81,22 @@ export async function saveUpload(file: File): Promise<SavedUpload> {
   const fileType = fileTypeFromMime(mimeType);
   const filename = sanitizeFilename(file.name || "file");
 
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+
+  // Auto page count
+  let pageCount = 1;
+  if (fileType === "pdf") {
+    try {
+      const pdfDoc = await PDFDocument.load(buffer, { ignoreEncryption: true });
+      pageCount = pdfDoc.getPageCount();
+    } catch (e) {
+      console.warn("Could not read PDF page count, defaulting to 1", e);
+      pageCount = 1;
+    }
+  }
+
   if (isVercelBlobEnabled()) {
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
     const blob = await put(`uploads/${randomUUID()}-${filename}`, buffer, {
       access: "public",
       contentType: mimeType,
@@ -91,6 +107,7 @@ export async function saveUpload(file: File): Promise<SavedUpload> {
       mimeType,
       size,
       fileType,
+      pageCount,
     };
   }
 
@@ -98,7 +115,6 @@ export async function saveUpload(file: File): Promise<SavedUpload> {
   await fs.mkdir(uploadsDir, { recursive: true });
 
   const storedName = `${randomUUID()}-${filename}`;
-  const buffer = Buffer.from(await file.arrayBuffer());
   await fs.writeFile(path.join(uploadsDir, storedName), buffer);
 
   return {
@@ -107,6 +123,7 @@ export async function saveUpload(file: File): Promise<SavedUpload> {
     mimeType,
     size,
     fileType,
+    pageCount,
   };
 }
 

@@ -163,6 +163,7 @@ function QrPanel({
   const [newName, setNewName] = useState("");
   const [showNew, setShowNew] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [qrZoomed, setQrZoomed] = useState(false);
   const qrRef = useRef<HTMLDivElement>(null);
 
   const uploadUrl = useMemo(() => {
@@ -182,6 +183,42 @@ function QrPanel({
   };
 
   return (
+    <>
+      {/* QR Zoom Modal */}
+      {qrZoomed && activeSession && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-black/80 backdrop-blur-sm"
+          onClick={() => setQrZoomed(false)}
+        >
+          <div
+            className="flex flex-col items-center gap-4 rounded-2xl bg-white p-8 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <QRCodeSVG
+              value={uploadUrl}
+              size={320}
+              level="H"
+              marginSize={2}
+              fgColor="#0f172a"
+            />
+            <div className="text-center">
+              <p className="font-mono text-2xl font-bold tracking-widest text-slate-900">
+                {activeSession.code}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Umiya Arts &amp; Commerce College · Print Desk
+              </p>
+            </div>
+            <button
+              onClick={() => setQrZoomed(false)}
+              className="mt-1 rounded-lg bg-slate-100 px-6 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
     <Card className="lg:sticky lg:top-6 flex flex-col gap-0 overflow-hidden border-emerald-100/60">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
@@ -249,18 +286,25 @@ function QrPanel({
         {/* QR display */}
         {activeSession ? (
           <div className="flex flex-col items-center gap-3 rounded-xl border border-emerald-100 bg-gradient-to-b from-emerald-50/70 via-emerald-50/20 to-transparent p-4">
-            <div
-              ref={qrRef}
-              className="rounded-xl bg-white p-3 shadow-sm ring-1 ring-black/5"
+            <button
+              title="Click to enlarge QR for scanning"
+              onClick={() => setQrZoomed(true)}
+              className="cursor-zoom-in rounded-xl p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
             >
-              <QRCodeSVG
-                value={uploadUrl}
-                size={208}
-                level="M"
-                marginSize={1}
-                fgColor="#0f172a"
-              />
-            </div>
+              <div
+                ref={qrRef}
+                className="rounded-xl bg-white p-3 shadow-sm ring-1 ring-black/5 transition hover:ring-2 hover:ring-emerald-400"
+              >
+                <QRCodeSVG
+                  value={uploadUrl}
+                  size={208}
+                  level="M"
+                  marginSize={1}
+                  fgColor="#0f172a"
+                />
+              </div>
+              <p className="mt-1 text-[10px] text-emerald-600/70">Tap to enlarge</p>
+            </button>
             <div className="flex w-full items-center justify-between rounded-lg bg-white px-3 py-2 ring-1 ring-black/5">
               <div className="min-w-0">
                 <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
@@ -467,6 +511,7 @@ function QrPanel({
         </AlertDialogContent>
       </AlertDialog>
     </Card>
+    </>
   );
 }
 
@@ -591,7 +636,14 @@ function FileCard({
             )}
           </div>
           <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
-            <span>{formatBytes(file.size)}</span>
+            <div className="flex items-center gap-2">
+              <span>{formatBytes(file.size)}</span>
+              {file.fileType === "pdf" && (
+                <span className="inline-flex items-center gap-0.5 rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700 ring-1 ring-blue-200">
+                  {file.pageCount ?? 1} pg
+                </span>
+              )}
+            </div>
             <span>{timeAgo(file.createdAt)}</span>
           </div>
           <div className="mt-2.5 flex gap-1">

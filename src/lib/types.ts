@@ -19,6 +19,7 @@ export interface FileShape {
   mimeType: string;
   size: number;
   fileType: FileType;
+  pageCount: number;
   studentName: string | null;
   createdAt: string; // ISO
   printedAt: string | null;
@@ -53,6 +54,7 @@ export function toFileShape(prismaFile: PrismaFile): FileShape {
     mimeType: prismaFile.mimeType,
     size: prismaFile.size,
     fileType,
+    pageCount: prismaFile.pageCount ?? 1,
     studentName: prismaFile.studentName,
     createdAt: prismaFile.createdAt.toISOString(),
     printedAt: prismaFile.printedAt ? prismaFile.printedAt.toISOString() : null,

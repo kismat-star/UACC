@@ -35,6 +35,7 @@ model File {
   printedAt   DateTime?
   printed     Boolean   @default(false)
   expiresAt   DateTime? // when set, file auto-deletes after this time
+  data        Bytes?    // persistent byte storage across serverless instances
 }
 
 // Simple key/value store for admin settings (singleton rows keyed by id).

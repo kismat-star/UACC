@@ -63,6 +63,7 @@ export async function POST(req: Request) {
       size: saved.size,
       fileType: saved.fileType,
       pageCount: saved.pageCount,
+      data: saved.buffer,
       studentName,
       expiresAt,
     },

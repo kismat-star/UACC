@@ -64,6 +64,7 @@ export interface SavedUpload {
   size: number;
   fileType: FileType;
   pageCount: number;
+  buffer: Buffer;
 }
 
 export async function saveUpload(file: File): Promise<SavedUpload> {
@@ -111,6 +112,7 @@ export async function saveUpload(file: File): Promise<SavedUpload> {
       size,
       fileType,
       pageCount,
+      buffer,
     };
   }
 
@@ -127,6 +129,7 @@ export async function saveUpload(file: File): Promise<SavedUpload> {
     size,
     fileType,
     pageCount,
+    buffer,
   };
 }
 

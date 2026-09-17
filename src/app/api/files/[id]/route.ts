@@ -24,17 +24,21 @@ export async function GET(
   }
 
   let buffer: Buffer;
-  try {
-    const result = await readUpload(file.storedName);
-    buffer = result.buffer;
-  } catch {
-    return NextResponse.json({ error: "File missing on disk" }, { status: 410 });
+  if (file.data) {
+    buffer = Buffer.from(file.data);
+  } else {
+    try {
+      const result = await readUpload(file.storedName);
+      buffer = result.buffer;
+    } catch {
+      return NextResponse.json({ error: "File missing on disk" }, { status: 410 });
+    }
   }
 
   const headers: Record<string, string> = {
     "Content-Type": file.mimeType,
     "Content-Length": String(buffer.length),
-    "Cache-Control": "no-store",
+    "Cache-Control": "public, max-age=3600, immutable",
   };
 
   if (download) {
@@ -47,7 +51,7 @@ export async function GET(
     headers["Content-Disposition"] = "inline";
   }
 
-  return new NextResponse(buffer, { status: 200, headers });
+  return new NextResponse(new Uint8Array(buffer), { status: 200, headers });
 }
 
 /**
@@ -144,11 +148,23 @@ export async function PATCH(
     // If auto-delete after print is configured, remove the file now.
     const settings = await getSettings();
     if (settings.autoDeleteAfterPrint) {
-      await deleteUpload(updated.storedName);
-      await db.file.delete({ where: { id } });
-      void notify("file-deleted", { fileId: id });
-      // Return the last-known shape so the client can react (e.g. optimistically
-      // remove the card from the grid).
+      // Give a 2-minute grace period so the print tab can finish loading and rendering
+      // without racing against instant deletion!
+      const graceExpiresAt = new Date(Date.now() + 2 * 60 * 1000);
+      await db.file.update({
+        where: { id },
+        data: { expiresAt: graceExpiresAt },
+      });
+      // Delay immediate cleanup by 30 seconds so print previews don't break
+      setTimeout(async () => {
+        try {
+          await deleteUpload(updated.storedName);
+          await db.file.delete({ where: { id } }).catch(() => {});
+          void notify("file-deleted", { fileId: id });
+        } catch {
+          /* ignore */
+        }
+      }, 30000);
       return NextResponse.json({ file: shape });
     }
   }

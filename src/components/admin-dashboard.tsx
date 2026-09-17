@@ -162,7 +162,6 @@ function QrPanel({
   const [copied, setCopied] = useState<"link" | "code" | null>(null);
   const [newName, setNewName] = useState("");
   const [showNew, setShowNew] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const [qrZoomed, setQrZoomed] = useState(false);
   const qrRef = useRef<HTMLDivElement>(null);
 
@@ -419,16 +418,6 @@ function QrPanel({
                 }
               />
             </div>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full text-destructive hover:text-destructive"
-              onClick={() => setConfirmDelete(true)}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-              Delete session &amp; all files
-            </Button>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed p-8 text-center">
@@ -486,30 +475,6 @@ function QrPanel({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete this session?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This permanently deletes <b>{activeSession?.name}</b> and{" "}
-              {activeSession?.fileCount ?? 0} file(s). This cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => {
-                if (activeSession) onDelete(activeSession.id);
-                setConfirmDelete(false);
-              }}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </Card>
     </>
   );
@@ -1388,17 +1353,6 @@ export function AdminDashboard() {
                       </span>
                     </label>
                     <div className="ml-auto flex flex-wrap items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        asChild
-                        disabled={selected.size === 0 || bulkWorking}
-                      >
-                        <a href={sessionZipUrl(activeId ?? "")} download>
-                          <FileArchive className="mr-1.5 h-3.5 w-3.5" />
-                          Download ZIP
-                        </a>
-                      </Button>
                       <Button
                         size="sm"
                         variant="outline"

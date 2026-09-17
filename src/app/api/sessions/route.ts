@@ -31,10 +31,24 @@ async function generateUniqueCode(): Promise<string> {
 
 export async function GET() {
   try {
-    const sessions = await db.session.findMany({
+    let sessions = await db.session.findMany({
       orderBy: { createdAt: "desc" },
       include: { _count: { select: { files: true } } },
     });
+
+    // If no session exists yet, automatically create the permanent main session
+    if (sessions.length === 0) {
+      const code = await generateUniqueCode();
+      const defaultSession = await db.session.create({
+        data: {
+          name: "College Print Desk",
+          code,
+        },
+        include: { _count: { select: { files: true } } },
+      });
+      sessions = [defaultSession];
+    }
+
     const shapes: SessionShape[] = sessions.map((s) => toSessionShape(s));
     return NextResponse.json({ sessions: shapes });
   } catch (err: unknown) {

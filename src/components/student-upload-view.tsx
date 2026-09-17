@@ -48,12 +48,34 @@ export function StudentUploadView({ code }: { code: string }) {
   const [loadState, setLoadState] = useState<"loading" | "ok" | "error">(
     "loading",
   );
-  const [studentName, setStudentName] = useState("");
-  const [pending, setPending] = useState<PendingFile[]>([]);
-  const [dragging, setDragging] = useState(false);
-  const [allDone, setAllDone] = useState(false);
+  const lastBeepedIds = useRef<Set<string>>(new Set());
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const playBeep = () => {
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(440, audioCtx.currentTime); // A4
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      oscillator.start();
+      oscillator.stop(audioCtx.currentTime + 0.1);
+    } catch (e) {
+      // ignore audio errors
+    }
+  };
+
+  // Play beep when a file finishes uploading
+  useEffect(() => {
+    pending.forEach((p) => {
+      if (p.status === 'done' && !lastBeepedIds.current.has(p.id)) {
+        playBeep();
+        lastBeepedIds.current.add(p.id);
+      }
+    });
+  }, [pending]);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
   // Remember the student's name across uploads on the same device.

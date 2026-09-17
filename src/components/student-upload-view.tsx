@@ -39,7 +39,7 @@ interface PendingFile {
   error?: string;
 }
 
-const ACCEPT = "image/*,application/pdf";
+const ACCEPT = "*/*"; // allow any file type
 const MAX_SIZE = 15 * 1024 * 1024; // 15MB — matches backend
 
 export function StudentUploadView({ code }: { code: string }) {
@@ -87,15 +87,7 @@ export function StudentUploadView({ code }: { code: string }) {
       const accepted: PendingFile[] = [];
       for (const f of arr) {
         const isImage = f.type.startsWith("image/");
-        const isPdf = f.type === "application/pdf";
-        if (!isImage && !isPdf) {
-          toast({
-            title: "Unsupported file",
-            description: `${f.name} — only images & PDF allowed.`,
-            variant: "destructive",
-          });
-          continue;
-        }
+        // No MIME type restriction; all files are accepted.
         if (f.size > MAX_SIZE) {
           toast({
             title: "File too large",

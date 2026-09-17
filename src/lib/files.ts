@@ -45,11 +45,14 @@ export function isPdf(mimeType: string): boolean {
 }
 
 export function isAllowedMime(mimeType: string): boolean {
-  return isImage(mimeType) || isPdf(mimeType);
+  // Allow any MIME type; previously only images and PDFs were accepted.
+  return typeof mimeType === "string" && mimeType.length > 0;
 }
 
 export function fileTypeFromMime(mimeType: string): FileType {
-  return isImage(mimeType) ? "image" : "pdf";
+  if (isImage(mimeType)) return "image";
+  if (isPdf(mimeType)) return "pdf";
+  return "other";
 }
 
 import { PDFDocument } from "pdf-lib";

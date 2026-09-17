@@ -1,6 +1,6 @@
 import type { File as PrismaFile, Session as PrismaSession } from "@prisma/client";
 
-export type FileType = "image" | "pdf";
+export type FileType = "image" | "pdf" | "other";
 
 export interface SessionShape {
   id: string;

@@ -99,6 +99,7 @@ import {
 } from "@/lib/api";
 import { formatBytes, expiryCountdown, timeAgo } from "@/lib/format";
 import type { FileShape, SessionShape, SettingsShape } from "@/lib/types";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 type FilterKind = "all" | "unprinted" | "image" | "pdf";
 type SortKind = "newest" | "oldest" | "name";
@@ -413,7 +414,7 @@ function GreetingCard() {
 
   if (!greeting) {
     return (
-      <div className="h-[68px] animate-pulse rounded-xl border border-emerald-100/60 bg-white/70 shadow-sm" />
+      <div className="h-[68px] animate-pulse rounded-xl border border-emerald-100/60 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 shadow-sm" />
     );
   }
 
@@ -433,44 +434,44 @@ function GreetingCard() {
   const getBgGradient = () => {
     switch (greeting.iconType) {
       case "morning":
-        return "from-amber-500/10 via-emerald-500/5 to-white/95";
+        return "from-amber-500/10 via-emerald-500/5 to-white/95 dark:from-amber-500/20 dark:via-emerald-950/20 dark:to-slate-900/95";
       case "afternoon":
-        return "from-emerald-500/10 via-teal-500/5 to-white/95";
+        return "from-emerald-500/10 via-teal-500/5 to-white/95 dark:from-emerald-500/20 dark:via-teal-950/20 dark:to-slate-900/95";
       case "evening":
-        return "from-orange-500/10 via-emerald-500/5 to-white/95";
+        return "from-orange-500/10 via-emerald-500/5 to-white/95 dark:from-orange-500/20 dark:via-purple-950/20 dark:to-slate-900/95";
       case "night":
-        return "from-indigo-500/10 via-slate-500/5 to-white/95";
+        return "from-indigo-500/10 via-slate-500/5 to-white/95 dark:from-indigo-500/20 dark:via-slate-900/40 dark:to-slate-900/95";
     }
   };
 
   return (
     <div
-      className={`relative overflow-hidden rounded-xl border border-emerald-100/80 bg-gradient-to-r ${getBgGradient()} p-3 shadow-sm backdrop-blur-md transition-all`}
+      className={`relative overflow-hidden rounded-xl border border-emerald-100/80 dark:border-slate-800 bg-gradient-to-r ${getBgGradient()} p-3 shadow-sm backdrop-blur-md transition-all`}
     >
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white shadow-xs ring-1 ring-black/5">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white dark:bg-slate-800 shadow-xs ring-1 ring-black/5 dark:ring-white/10">
             {renderIcon()}
           </div>
           <div>
-            <h3 className="text-sm font-bold text-slate-800 tracking-tight">
+            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 tracking-tight">
               {greeting.text}
             </h3>
-            <p className="text-[11px] font-medium text-slate-500">
+            <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
               {greeting.subtext}
             </p>
           </div>
         </div>
 
         <div className="flex flex-col items-end gap-0.5 shrink-0">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 border border-emerald-200/60">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/50">
             <span className="relative flex h-1.5 w-1.5">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
             </span>
             Desk Ready
           </span>
-          <span className="text-[10px] font-medium text-slate-400">
+          <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500">
             {greeting.dateStr} · {greeting.timeStr}
           </span>
         </div>
@@ -559,7 +560,7 @@ function QrPanel({
         </div>
       )}
 
-    <Card className="flex flex-col gap-0 overflow-hidden border-emerald-100/60 shadow-sm bg-white/95 backdrop-blur-sm">
+    <Card className="flex flex-col gap-0 overflow-hidden border-emerald-100/60 dark:border-slate-800 shadow-sm bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <span className="flex h-6 w-6 items-center justify-center rounded-md bg-emerald-600 text-white">
@@ -625,7 +626,7 @@ function QrPanel({
 
         {/* QR display */}
         {activeSession ? (
-          <div className="flex flex-col items-center gap-3 rounded-xl border border-emerald-100 bg-gradient-to-b from-emerald-50/70 via-emerald-50/20 to-transparent p-4">
+          <div className="flex flex-col items-center gap-3 rounded-xl border border-emerald-100 dark:border-slate-800 bg-gradient-to-b from-emerald-50/70 via-emerald-50/20 to-transparent dark:from-emerald-950/30 dark:via-slate-900/40 dark:to-transparent p-4">
             <button
               title="Click to enlarge QR for scanning"
               onClick={() => setQrZoomed(true)}
@@ -1638,6 +1639,7 @@ export function AdminDashboard() {
             >
               <SettingsIcon className="h-4 w-4" />
             </Button>
+            <ThemeToggle />
           </div>
         </div>
       </header>

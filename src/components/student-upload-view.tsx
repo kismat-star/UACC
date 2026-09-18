@@ -29,6 +29,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getSessionByCode, uploadFile } from "@/lib/api";
 import { formatBytes } from "@/lib/format";
 import type { SessionShape } from "@/lib/types";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 interface PendingFile {
   id: string;
@@ -590,6 +591,7 @@ function Shell({
           <Badge variant="outline" className="border-emerald-300 text-emerald-700 bg-emerald-50/60 font-semibold text-xs px-2.5 py-1">
             Upload
           </Badge>
+          <ThemeToggle />
         </div>
       </header>
       <main className="mx-auto w-full max-w-xl flex-1 px-4 py-5">{children}</main>

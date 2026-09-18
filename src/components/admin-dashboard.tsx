@@ -31,11 +31,8 @@ import {
   Users,
   DownloadCloud,
   Printer as PrinterIcon,
-  ImageIcon as ImageIcon2,
   Filter,
   ChevronDown,
-  Calendar,
-  Hash,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -517,50 +514,6 @@ function QrPanel({
               </div>
               <p className="mt-1 text-[10px] text-emerald-600/70">Tap to enlarge</p>
             </button>
-            <div className="flex w-full items-center justify-between rounded-lg bg-white px-3 py-2 ring-1 ring-black/5">
-              <div className="min-w-0">
-                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                  Session code
-                </p>
-                <p className="font-mono text-lg font-bold tracking-widest text-slate-900">
-                  {activeSession.code}
-                </p>
-              </div>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => copy(activeSession.code, "code")}
-              >
-                {copied === "code" ? (
-                  <Check className="h-4 w-4 text-emerald-600" />
-                ) : (
-                  <Copy className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-
-            {/* Quick facts */}
-            <div className="grid w-full grid-cols-2 gap-2">
-              <div className="rounded-lg bg-white px-3 py-2 ring-1 ring-black/5">
-                <p className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground">
-                  <Hash className="h-3 w-3" /> Files
-                </p>
-                <p className="text-base font-semibold text-slate-900">
-                  {activeSession.fileCount}
-                </p>
-              </div>
-              <div className="rounded-lg bg-white px-3 py-2 ring-1 ring-black/5">
-                <p className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground">
-                  <Calendar className="h-3 w-3" /> Created
-                </p>
-                <p className="text-base font-semibold text-slate-900">
-                  {new Date(activeSession.createdAt).toLocaleDateString(
-                    undefined,
-                    { month: "short", day: "numeric" },
-                  )}
-                </p>
-              </div>
-            </div>
 
             <div className="flex w-full flex-col gap-2">
               <Button

@@ -719,6 +719,9 @@ function FileCard({
   printing: boolean;
 }) {
   const expiry = expiryCountdown(file.expiresAt);
+  const isImg = file.fileType === "image" || file.mimeType.startsWith("image/");
+  const studentNameClean = file.studentName?.trim() || "Anonymous";
+  const studentInitial = studentNameClean[0]?.toUpperCase() || "A";
 
   return (
     <motion.div
@@ -729,141 +732,187 @@ function FileCard({
       transition={{ duration: 0.25, delay: Math.min(index * 0.03, 0.25) }}
     >
       <Card
-        className={`group relative overflow-hidden transition-all hover:shadow-md ${
-          selected ? "ring-2 ring-emerald-500" : "ring-1 ring-transparent"
+        className={`group relative flex flex-col overflow-hidden rounded-2xl border bg-card transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
+          selected
+            ? "border-emerald-500 ring-2 ring-emerald-500/20 shadow-emerald-500/10"
+            : "border-border/60 hover:border-emerald-500/40 shadow-sm"
         }`}
       >
-        {/* Selection checkbox */}
-        <div
-          className={`absolute left-2 top-2 z-10 transition-opacity ${
-            selectMode || selected
-              ? "opacity-100"
-              : "opacity-0 group-hover:opacity-100"
-          }`}
-        >
-          <div className="rounded-md bg-white/90 p-0.5 shadow-sm ring-1 ring-black/5">
-            <Checkbox
-              checked={selected}
-              onCheckedChange={onToggleSelect}
-              aria-label={`Select ${file.filename}`}
-            />
+        {/* Thumbnail & Preview container */}
+        <div className="relative h-44 w-full overflow-hidden bg-slate-100 dark:bg-slate-900/60">
+          {/* Selection checkbox */}
+          <div
+            className={`absolute left-2.5 top-2.5 z-20 transition-all duration-200 ${
+              selectMode || selected
+                ? "opacity-100 scale-100"
+                : "opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100"
+            }`}
+          >
+            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-white/95 shadow-md backdrop-blur-md ring-1 ring-black/10 dark:bg-slate-900/90 dark:ring-white/10">
+              <Checkbox
+                checked={selected}
+                onCheckedChange={onToggleSelect}
+                aria-label={`Select ${file.filename}`}
+              />
+            </div>
           </div>
-        </div>
 
-        <button
-          onClick={selectMode ? onToggleSelect : onView}
-          className="relative flex h-36 w-full items-center justify-center overflow-hidden bg-muted/40"
-        >
-          {file.fileType === "image" ? (
-             
-            <img
-              src={fileUrl(file.id)}
-              alt={file.filename}
-              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-            />
-          ) : (
-            <div className="flex flex-col items-center gap-2 text-rose-500">
-              <FileText className="h-12 w-12" strokeWidth={1.5} />
-              <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                PDF
+          {/* Printed Status Pill - Top Right */}
+          <div className="absolute right-2.5 top-2.5 z-20">
+            {file.printed ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600/90 px-2.5 py-0.5 text-[11px] font-semibold text-white shadow-md backdrop-blur-md ring-1 ring-emerald-400/30">
+                <CheckCircle2 className="h-3 w-3" />
+                Printed
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-900/80 px-2.5 py-0.5 text-[11px] font-semibold text-slate-100 shadow-md backdrop-blur-md ring-1 ring-white/15 dark:bg-slate-800/90">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                New
+              </span>
+            )}
+          </div>
+
+          {/* File Format Badge - Bottom Left overlay */}
+          <div className="absolute bottom-2.5 left-2.5 z-20">
+            <span className="inline-flex items-center gap-1 rounded-md bg-black/60 px-2 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider text-white shadow-sm backdrop-blur-md">
+              {isImg ? (
+                <>
+                  <ImageIcon className="h-2.5 w-2.5 text-emerald-400" />
+                  {file.mimeType.split("/")[1]?.toUpperCase() || "IMAGE"}
+                </>
+              ) : (
+                <>
+                  <FileText className="h-2.5 w-2.5 text-rose-400" />
+                  PDF · {file.pageCount ?? 1}p
+                </>
+              )}
+            </span>
+          </div>
+
+          {/* Interactive Clickable Area to View */}
+          <button
+            onClick={selectMode ? onToggleSelect : onView}
+            className="group/btn relative h-full w-full cursor-pointer text-left focus:outline-none"
+            title="Click to view file"
+          >
+            {isImg ? (
+              <img
+                src={fileUrl(file.id)}
+                alt={file.filename}
+                className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+              />
+            ) : (
+              <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-rose-500/5 via-slate-100 to-slate-200/80 p-4 transition-colors dark:from-rose-500/10 dark:via-slate-900 dark:to-slate-800">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-md ring-1 ring-rose-500/20 transition-transform duration-300 group-hover:scale-110 dark:bg-slate-800">
+                  <FileText className="h-8 w-8 text-rose-500" strokeWidth={1.8} />
+                </div>
+                <span className="text-[11px] font-medium text-muted-foreground">
+                  PDF Document
+                </span>
+              </div>
+            )}
+
+            {/* Hover overlay with eye icon */}
+            <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 backdrop-blur-[2px] transition-opacity duration-200 group-hover:opacity-100">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-slate-900 shadow-lg dark:bg-slate-900/90 dark:text-white">
+                <Eye className="h-3.5 w-3.5 text-emerald-600" />
+                Quick View
               </span>
             </div>
-          )}
-          <div className="absolute right-2 top-2 flex gap-1">
-            {file.printed && (
-              <Badge className="bg-emerald-600 text-white hover:bg-emerald-600">
-                <CheckCircle2 className="mr-1 h-3 w-3" />
-                Printed
-              </Badge>
-            )}
-            {expiry && (
-              <Badge
-                variant="secondary"
-                className={
-                  expiry === "expired"
-                    ? "bg-rose-100 text-rose-700"
-                    : "bg-amber-100 text-amber-800"
-                }
-              >
-                <Clock className="mr-1 h-3 w-3" />
-                {expiry}
-              </Badge>
-            )}
-          </div>
-        </button>
-        <CardContent className="p-3">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0 flex-1">
-              <p
-                className="truncate text-sm font-medium"
-                title={file.studentName || "Anonymous"}
-              >
-                {file.studentName || "Anonymous"}
-              </p>
-              <p
-                className="truncate text-xs text-muted-foreground"
-                title={file.filename}
-              >
-                {file.filename}
-              </p>
-            </div>
-            {file.fileType === "image" ? (
-              <ImageIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-            ) : (
-              <FileText className="h-3.5 w-3.5 shrink-0 text-rose-500" />
-            )}
-          </div>
-          <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
+          </button>
+        </div>
+
+        {/* Card Body */}
+        <CardContent className="flex flex-1 flex-col justify-between p-3.5 gap-2.5">
+          {/* Student Info & File Name */}
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span>{formatBytes(file.size)}</span>
-              {file.fileType === "pdf" && (
-                <span className="inline-flex items-center gap-0.5 rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700 ring-1 ring-blue-200">
-                  {file.pageCount ?? 1} pg
-                </span>
-              )}
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 text-[11px] font-bold text-white shadow-sm">
+                {studentInitial}
+              </div>
+              <p
+                className="truncate text-sm font-semibold tracking-tight text-slate-900 dark:text-slate-100"
+                title={studentNameClean}
+              >
+                {studentNameClean}
+              </p>
             </div>
-            <span>{timeAgo(file.createdAt)}</span>
+
+            <p
+              className="mt-1 truncate text-xs text-muted-foreground pl-8 font-normal"
+              title={file.filename}
+            >
+              {file.filename}
+            </p>
           </div>
-          <div className="mt-2.5 flex gap-1">
+
+          {/* Meta & Expiry Chips Row */}
+          <div className="flex flex-wrap items-center justify-between gap-1.5 border-t border-border/50 pt-2 text-[11px]">
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <span className="font-medium text-slate-700 dark:text-slate-300">
+                {formatBytes(file.size)}
+              </span>
+              <span>•</span>
+              <span>{timeAgo(file.createdAt)}</span>
+            </div>
+
+            {/* Clean Expiry Pill */}
+            {expiry && (
+              <span
+                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                  expiry === "expired"
+                    ? "bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400"
+                    : "bg-amber-100/80 text-amber-900 dark:bg-amber-950/40 dark:text-amber-300"
+                }`}
+                title={`Expires at ${file.expiresAt ? new Date(file.expiresAt).toLocaleTimeString() : ""}`}
+              >
+                <Clock className="h-2.5 w-2.5" />
+                {expiry}
+              </span>
+            )}
+          </div>
+
+          {/* Action Buttons Row */}
+          <div className="flex items-center gap-1.5 pt-0.5">
+            {/* Hero Print Button */}
             <Button
               size="sm"
-              variant="outline"
-              className="h-8 flex-1"
-              onClick={onView}
-              title="View"
-            >
-              <Eye className="h-3.5 w-3.5" />
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8 flex-1"
-              asChild
-            >
-              <a href={fileUrl(file.id, true)} download title="Download">
-                <Download className="h-3.5 w-3.5" />
-              </a>
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8 flex-1"
               onClick={onPrint}
               disabled={printing}
-              title="Print"
+              className={`h-8 flex-1 gap-1.5 text-xs font-semibold shadow-sm transition-all ${
+                file.printed
+                  ? "bg-slate-800 text-white hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600"
+                  : "bg-emerald-600 text-white hover:bg-emerald-500 shadow-emerald-600/25"
+              }`}
+              title="Print document"
             >
               {printing ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
               ) : (
                 <Printer className="h-3.5 w-3.5" />
               )}
+              {file.printed ? "Reprint" : "Print"}
             </Button>
+
+            {/* Secondary Action: Download */}
             <Button
               size="sm"
               variant="outline"
-              className="h-8 flex-1 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              className="h-8 w-8 shrink-0 p-0 text-muted-foreground hover:text-foreground"
+              asChild
+            >
+              <a href={fileUrl(file.id, true)} download title="Download file">
+                <Download className="h-3.5 w-3.5" />
+              </a>
+            </Button>
+
+            {/* Secondary Action: Delete */}
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 w-8 shrink-0 p-0 text-muted-foreground hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40"
               onClick={onDelete}
-              title="Delete"
+              title="Delete file"
             >
               <Trash2 className="h-3.5 w-3.5" />
             </Button>

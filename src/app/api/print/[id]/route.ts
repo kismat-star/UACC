@@ -283,11 +283,20 @@ export async function GET(
 
       function triggerPrint() {
         try {
+          window.focus();
           window.print();
         } catch (e) {
           console.error("Print error:", e);
         }
       }
+
+      window.addEventListener("afterprint", function() {
+        if (window.opener && window.opener !== window) {
+          setTimeout(function() {
+            try { window.close(); } catch(e) {}
+          }, 150);
+        }
+      });
 
       ${
         isImg

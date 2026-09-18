@@ -83,7 +83,21 @@ export async function GET(req: Request) {
 <body>
   <button class="print-btn" onclick="window.print()">🖨 Print ${files.length} page(s)</button>
   ${pages}
-  <script>setTimeout(function(){try{window.print()}catch(e){}},500);</script>
+  <script>
+    setTimeout(function(){
+      try {
+        window.focus();
+        window.print();
+      } catch(e){}
+    }, 500);
+    window.addEventListener("afterprint", function() {
+      if (window.opener && window.opener !== window) {
+        setTimeout(function() {
+          try { window.close(); } catch(e) {}
+        }, 150);
+      }
+    });
+  </script>
 </body>
 </html>`;
 

@@ -1000,8 +1000,27 @@ export function AdminDashboard() {
 
   const handlePrint = async (file: FileShape) => {
     setPrintingId(file.id);
-    window.open(printUrl(file.id), "_blank", "noopener,noreferrer");
     try {
+      const isMobile = typeof navigator !== "undefined" && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      if (isMobile) {
+        window.open(printUrl(file.id), "_blank");
+      } else {
+        let iframe = document.getElementById("direct-print-frame") as HTMLIFrameElement | null;
+        if (!iframe) {
+          iframe = document.createElement("iframe");
+          iframe.id = "direct-print-frame";
+          iframe.style.position = "fixed";
+          iframe.style.right = "0";
+          iframe.style.bottom = "0";
+          iframe.style.width = "0";
+          iframe.style.height = "0";
+          iframe.style.border = "0";
+          iframe.style.visibility = "hidden";
+          document.body.appendChild(iframe);
+        }
+        iframe.src = printUrl(file.id);
+      }
+
       const updated = await markPrinted(file.id, true);
       if (updated) {
         setFiles((prev) =>
@@ -1096,7 +1115,27 @@ export function AdminDashboard() {
   const handleBulkPrint = () => {
     const ids = Array.from(selected);
     if (ids.length === 0) return;
-    window.open(printAllUrl(ids), "_blank", "noopener,noreferrer");
+
+    const isMobile = typeof navigator !== "undefined" && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isMobile) {
+      window.open(printAllUrl(ids), "_blank");
+    } else {
+      let iframe = document.getElementById("direct-print-frame") as HTMLIFrameElement | null;
+      if (!iframe) {
+        iframe = document.createElement("iframe");
+        iframe.id = "direct-print-frame";
+        iframe.style.position = "fixed";
+        iframe.style.right = "0";
+        iframe.style.bottom = "0";
+        iframe.style.width = "0";
+        iframe.style.height = "0";
+        iframe.style.border = "0";
+        iframe.style.visibility = "hidden";
+        document.body.appendChild(iframe);
+      }
+      iframe.src = printAllUrl(ids);
+    }
+
     // Mark them printed (best-effort, sequential).
     (async () => {
       for (const id of ids) {

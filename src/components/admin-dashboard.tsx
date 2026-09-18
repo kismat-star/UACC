@@ -136,6 +136,221 @@ function downloadSvgAsPng(svg: SVGSVGElement | null, filename: string) {
   img.src = url;
 }
 
+/**
+ * Direct print a single file using an off-screen render frame.
+ * Triggers the browser's native print dialog immediately without opening a new tab or preview page.
+ */
+function directPrintFile(file: FileShape): Promise<void> {
+  return new Promise<void>((resolve) => {
+    const oldFrame = document.getElementById("direct-print-frame");
+    if (oldFrame) oldFrame.remove();
+
+    const iframe = document.createElement("iframe");
+    iframe.id = "direct-print-frame";
+    // Off-screen with dimensions so Chrome/Edge fully render layout before printing
+    iframe.style.position = "fixed";
+    iframe.style.right = "100vw";
+    iframe.style.bottom = "100vh";
+    iframe.style.width = "1000px";
+    iframe.style.height = "1000px";
+    iframe.style.border = "0";
+    iframe.style.opacity = "0";
+    iframe.style.pointerEvents = "none";
+    iframe.style.zIndex = "-9999";
+    document.body.appendChild(iframe);
+
+    const isImg = file.fileType === "image" || file.mimeType.startsWith("image/");
+    const rawUrl = fileUrl(file.id);
+
+    if (isImg) {
+      const doc = iframe.contentWindow?.document;
+      if (!doc) {
+        resolve();
+        return;
+      }
+      doc.open();
+      doc.write(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>${file.filename.replace(/[<>&"]/g, "_")}</title>
+  <style>
+    @page { margin: 0; size: auto; }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #ffffff;
+      width: 100%;
+      height: 100%;
+    }
+    .print-page {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      page-break-inside: avoid;
+    }
+    img {
+      max-width: 100vw;
+      max-height: 100vh;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      margin: auto;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="print-page">
+    <img id="print-target" src="${rawUrl}" alt="Student Document" />
+  </div>
+</body>
+</html>`);
+      doc.close();
+
+      const img = doc.getElementById("print-target") as HTMLImageElement | null;
+      const trigger = () => {
+        try {
+          iframe.contentWindow?.focus();
+          iframe.contentWindow?.print();
+        } catch (e) {
+          console.error("Direct print failed:", e);
+        }
+        resolve();
+      };
+
+      if (img) {
+        if (img.complete && img.naturalWidth > 0) {
+          setTimeout(trigger, 150);
+        } else if (typeof img.decode === "function") {
+          img.decode().then(() => setTimeout(trigger, 100)).catch(() => {
+            img.onload = () => setTimeout(trigger, 100);
+          });
+        } else {
+          img.onload = () => setTimeout(trigger, 100);
+        }
+      } else {
+        setTimeout(trigger, 300);
+      }
+    } else {
+      // PDF handling
+      iframe.src = rawUrl;
+      iframe.onload = () => {
+        setTimeout(() => {
+          try {
+            iframe.contentWindow?.focus();
+            iframe.contentWindow?.print();
+          } catch {
+            // Fallback for sandboxed PDF viewers
+            window.open(rawUrl, "_blank");
+          }
+          resolve();
+        }, 500);
+      };
+    }
+  });
+}
+
+/**
+ * Direct print multiple selected files in one batch without opening a new tab.
+ */
+function directBulkPrint(filesToPrint: FileShape[]): Promise<void> {
+  return new Promise<void>((resolve) => {
+    const oldFrame = document.getElementById("direct-print-frame");
+    if (oldFrame) oldFrame.remove();
+
+    const iframe = document.createElement("iframe");
+    iframe.id = "direct-print-frame";
+    iframe.style.position = "fixed";
+    iframe.style.right = "100vw";
+    iframe.style.bottom = "100vh";
+    iframe.style.width = "1000px";
+    iframe.style.height = "1000px";
+    iframe.style.border = "0";
+    iframe.style.opacity = "0";
+    iframe.style.pointerEvents = "none";
+    iframe.style.zIndex = "-9999";
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow?.document;
+    if (!doc) {
+      resolve();
+      return;
+    }
+
+    const pages = filesToPrint
+      .map(
+        (f) => `
+      <div class="print-page">
+        ${
+          f.fileType === "image" || f.mimeType.startsWith("image/")
+            ? `<img src="${fileUrl(f.id)}" alt="Student Document" />`
+            : `<iframe src="${fileUrl(f.id)}" class="pdf-inner"></iframe>`
+        }
+      </div>`,
+      )
+      .join("\n");
+
+    doc.open();
+    doc.write(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Batch Print (${filesToPrint.length} files)</title>
+  <style>
+    @page { margin: 10mm; size: auto; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: #ffffff; }
+    .print-page {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      page-break-after: always;
+      break-after: page;
+    }
+    .print-page:last-child {
+      page-break-after: auto;
+      break-after: auto;
+    }
+    img {
+      max-width: 100%;
+      max-height: 95vh;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      margin: auto;
+      display: block;
+    }
+    .pdf-inner {
+      width: 100%;
+      height: 95vh;
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  ${pages}
+</body>
+</html>`);
+    doc.close();
+
+    setTimeout(() => {
+      try {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+      } catch (e) {
+        console.error("Direct bulk print failed:", e);
+      }
+      resolve();
+    }, 700);
+  });
+}
+
 /* ------------------------------------------------------------------ */
 /*  QR Panel                                                          */
 /* ------------------------------------------------------------------ */
@@ -1001,25 +1216,7 @@ export function AdminDashboard() {
   const handlePrint = async (file: FileShape) => {
     setPrintingId(file.id);
     try {
-      const isMobile = typeof navigator !== "undefined" && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-      if (isMobile) {
-        window.open(printUrl(file.id), "_blank");
-      } else {
-        let iframe = document.getElementById("direct-print-frame") as HTMLIFrameElement | null;
-        if (!iframe) {
-          iframe = document.createElement("iframe");
-          iframe.id = "direct-print-frame";
-          iframe.style.position = "fixed";
-          iframe.style.right = "0";
-          iframe.style.bottom = "0";
-          iframe.style.width = "0";
-          iframe.style.height = "0";
-          iframe.style.border = "0";
-          iframe.style.visibility = "hidden";
-          document.body.appendChild(iframe);
-        }
-        iframe.src = printUrl(file.id);
-      }
+      await directPrintFile(file);
 
       const updated = await markPrinted(file.id, true);
       if (updated) {
@@ -1112,29 +1309,12 @@ export function AdminDashboard() {
     toast({ title: `Deleted ${n} file(s)` });
   };
 
-  const handleBulkPrint = () => {
+  const handleBulkPrint = async () => {
     const ids = Array.from(selected);
     if (ids.length === 0) return;
 
-    const isMobile = typeof navigator !== "undefined" && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    if (isMobile) {
-      window.open(printAllUrl(ids), "_blank");
-    } else {
-      let iframe = document.getElementById("direct-print-frame") as HTMLIFrameElement | null;
-      if (!iframe) {
-        iframe = document.createElement("iframe");
-        iframe.id = "direct-print-frame";
-        iframe.style.position = "fixed";
-        iframe.style.right = "0";
-        iframe.style.bottom = "0";
-        iframe.style.width = "0";
-        iframe.style.height = "0";
-        iframe.style.border = "0";
-        iframe.style.visibility = "hidden";
-        document.body.appendChild(iframe);
-      }
-      iframe.src = printAllUrl(ids);
-    }
+    const selectedFiles = files.filter((f) => selected.has(f.id));
+    await directBulkPrint(selectedFiles);
 
     // Mark them printed (best-effort, sequential).
     (async () => {

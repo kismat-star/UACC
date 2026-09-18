@@ -1640,6 +1640,17 @@ export function AdminDashboard() {
               <SettingsIcon className="h-4 w-4" />
             </Button>
             <ThemeToggle />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                window.dispatchEvent(new Event("uacc_logout"));
+              }}
+              title="Lock Admin Desk (Log out)"
+              className="text-muted-foreground hover:text-rose-600 dark:hover:text-rose-400"
+            >
+              <Lock className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </header>

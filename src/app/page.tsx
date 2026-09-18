@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { AdminDashboard } from "@/components/admin-dashboard";
 import { StudentUploadView } from "@/components/student-upload-view";
+import { AdminAuthGate } from "@/components/admin-auth-gate";
 
 function Router() {
   const params = useSearchParams();
@@ -12,7 +13,11 @@ function Router() {
   if (uploadCode) {
     return <StudentUploadView code={uploadCode} />;
   }
-  return <AdminDashboard />;
+  return (
+    <AdminAuthGate>
+      <AdminDashboard />
+    </AdminAuthGate>
+  );
 }
 
 export default function Home() {

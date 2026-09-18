@@ -884,8 +884,28 @@ export function AdminDashboard() {
     setSelectMode(false);
     refreshFiles();
     if (!activeId) return;
-    const t = setInterval(refreshFiles, 4000);
-    return () => clearInterval(t);
+
+    // Fast 1.5s polling while page is visible
+    const t = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        refreshFiles();
+      }
+    }, 1500);
+
+    const onVisibilityOrFocus = () => {
+      if (document.visibilityState === "visible") {
+        refreshFiles();
+      }
+    };
+
+    window.addEventListener("focus", onVisibilityOrFocus);
+    document.addEventListener("visibilitychange", onVisibilityOrFocus);
+
+    return () => {
+      clearInterval(t);
+      window.removeEventListener("focus", onVisibilityOrFocus);
+      document.removeEventListener("visibilitychange", onVisibilityOrFocus);
+    };
   }, [activeId, refreshFiles]);
 
   useAdminSocket(

@@ -23,7 +23,15 @@ export async function GET(
   const { id } = await params;
   const safeId = encodeURIComponent(id);
 
-  const file = await db.file.findUnique({ where: { id } });
+  const file = await db.file.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      filename: true,
+      studentName: true,
+      fileType: true,
+    },
+  });
   if (!file) {
     const notFoundHtml = `<!DOCTYPE html>
 <html>

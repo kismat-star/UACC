@@ -67,6 +67,21 @@ export async function POST(req: Request) {
       studentName,
       expiresAt,
     },
+    select: {
+      id: true,
+      sessionId: true,
+      filename: true,
+      storedName: true,
+      mimeType: true,
+      size: true,
+      fileType: true,
+      pageCount: true,
+      studentName: true,
+      createdAt: true,
+      printedAt: true,
+      printed: true,
+      expiresAt: true,
+    },
   });
 
   const shape: FileShape = toFileShape(file);

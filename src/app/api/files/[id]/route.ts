@@ -63,7 +63,10 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const file = await db.file.findUnique({ where: { id } });
+  const file = await db.file.findUnique({
+    where: { id },
+    select: { id: true, storedName: true },
+  });
   if (!file) {
     return NextResponse.json({ error: "File not found" }, { status: 404 });
   }
@@ -131,7 +134,10 @@ export async function PATCH(
     );
   }
 
-  const before = await db.file.findUnique({ where: { id } });
+  const before = await db.file.findUnique({
+    where: { id },
+    select: { id: true, printed: true },
+  });
   if (!before) {
     return NextResponse.json({ error: "File not found" }, { status: 404 });
   }
@@ -139,7 +145,25 @@ export async function PATCH(
   const turnedPrintedOn =
     typeof data.printed === "boolean" ? data.printed === true && !before.printed : false;
 
-  const updated = await db.file.update({ where: { id }, data });
+  const updated = await db.file.update({
+    where: { id },
+    data,
+    select: {
+      id: true,
+      sessionId: true,
+      filename: true,
+      storedName: true,
+      mimeType: true,
+      size: true,
+      fileType: true,
+      pageCount: true,
+      studentName: true,
+      createdAt: true,
+      printedAt: true,
+      printed: true,
+      expiresAt: true,
+    },
+  });
 
   if (turnedPrintedOn) {
     const shape: FileShape = toFileShape(updated);

@@ -218,10 +218,24 @@ export function StudentUploadView({ code }: { code: string }) {
     initAudio();
     const toUpload = pending.filter((p) => p.status === "pending");
     if (toUpload.length === 0) return;
-    // Upload sequentially to keep things simple & predictable on mobile networks.
-    for (const pf of toUpload) {
-      await uploadOne(pf);
-    }
+
+    // Upload with concurrency of up to 3 parallel streams for faster mobile uploads
+    const CONCURRENCY = 3;
+    const queue = [...toUpload];
+    const workers = Array.from(
+      { length: Math.min(CONCURRENCY, queue.length) },
+      async () => {
+        while (queue.length > 0) {
+          const item = queue.shift();
+          if (item) {
+            await uploadOne(item);
+          }
+        }
+      },
+    );
+
+    await Promise.all(workers);
+
     setAllDone(true);
     toast({
       title: "Upload complete",

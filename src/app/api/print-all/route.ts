@@ -25,6 +25,21 @@ export async function GET(req: Request) {
   const files = (
     await db.file.findMany({
       where: { id: { in: ids } },
+      select: {
+        id: true,
+        sessionId: true,
+        filename: true,
+        storedName: true,
+        mimeType: true,
+        size: true,
+        fileType: true,
+        pageCount: true,
+        studentName: true,
+        createdAt: true,
+        printedAt: true,
+        printed: true,
+        expiresAt: true,
+      },
       orderBy: { createdAt: "asc" },
     })
   )

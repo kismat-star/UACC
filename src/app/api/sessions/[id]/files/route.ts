@@ -33,6 +33,21 @@ export async function GET(
 
   const files = await db.file.findMany({
     where: { sessionId: id },
+    select: {
+      id: true,
+      sessionId: true,
+      filename: true,
+      storedName: true,
+      mimeType: true,
+      size: true,
+      fileType: true,
+      pageCount: true,
+      studentName: true,
+      createdAt: true,
+      printedAt: true,
+      printed: true,
+      expiresAt: true,
+    },
     orderBy: { createdAt: "desc" },
   });
 

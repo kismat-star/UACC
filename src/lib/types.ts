@@ -38,7 +38,9 @@ type PrismaFileWithCount = PrismaFile & { _count?: { files?: number } };
  * Map a Prisma File row into the API-safe FileShape.
  * Handles Date -> ISO conversion. fileType is constrained to "image" | "pdf".
  */
-export function toFileShape(prismaFile: PrismaFile): FileShape {
+export function toFileShape(
+  prismaFile: Omit<PrismaFile, "data"> & { data?: unknown },
+): FileShape {
   const fileType: FileType =
     prismaFile.fileType === "image" || prismaFile.fileType === "pdf"
       ? (prismaFile.fileType as FileType)

@@ -7,11 +7,20 @@ const KEY_RETENTION = "retentionHours";
 const DEFAULT_AUTO_DELETE = false;
 const DEFAULT_RETENTION_HOURS = 1;
 
+let cachedSettings: SettingsShape | null = null;
+let cacheExpiresAt = 0;
+const CACHE_TTL_MS = 60_000; // 60 seconds
+
 /**
  * Read current settings from the Setting table (key/value singleton rows).
  * Falls back to documented defaults if rows are missing or unparseable.
  */
 export async function getSettings(): Promise<SettingsShape> {
+  const now = Date.now();
+  if (cachedSettings && now < cacheExpiresAt) {
+    return cachedSettings;
+  }
+
   let autoDeleteAfterPrint = DEFAULT_AUTO_DELETE;
   let retentionHours = DEFAULT_RETENTION_HOURS;
 
@@ -33,7 +42,10 @@ export async function getSettings(): Promise<SettingsShape> {
     console.error("[settings] getSettings failed, returning defaults:", err);
   }
 
-  return { autoDeleteAfterPrint, retentionHours };
+  const result: SettingsShape = { autoDeleteAfterPrint, retentionHours };
+  cachedSettings = result;
+  cacheExpiresAt = Date.now() + CACHE_TTL_MS;
+  return result;
 }
 
 /**
@@ -67,6 +79,9 @@ export async function updateSettings(
   if (ops.length > 0) {
     await Promise.all(ops);
   }
+
+  cachedSettings = null;
+  cacheExpiresAt = 0;
 
   return getSettings();
 }

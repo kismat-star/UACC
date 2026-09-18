@@ -1490,9 +1490,9 @@ export function AdminDashboard() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-b from-muted/40 via-muted/20 to-background">
+    <div className="flex min-h-screen flex-col bg-white/50 dark:bg-slate-950/70 backdrop-blur-[2px]">
       {/* Header */}
-      <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur">
+      <header className="sticky top-0 z-30 border-b bg-white/85 dark:bg-slate-900/85 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
           <div className="flex items-center gap-3">
             <img

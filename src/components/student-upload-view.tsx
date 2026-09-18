@@ -571,8 +571,8 @@ function Shell({
   sessionName?: string;
 }) {
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-b from-emerald-50/40 via-background to-background">
-      <header className="border-b bg-background/80 backdrop-blur">
+    <div className="flex min-h-screen flex-col bg-white/60 dark:bg-slate-950/70 backdrop-blur-[2px]">
+      <header className="border-b bg-white/85 dark:bg-slate-900/85 backdrop-blur-md sticky top-0 z-30">
         <div className="mx-auto flex max-w-xl items-center gap-3 px-4 py-3">
           <img
             src="/logo.png"

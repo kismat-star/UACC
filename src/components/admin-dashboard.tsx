@@ -1493,18 +1493,18 @@ export function AdminDashboard() {
     <div className="flex min-h-screen flex-col bg-white/50 dark:bg-slate-950/70 backdrop-blur-[2px]">
       {/* Header */}
       <header className="sticky top-0 z-30 border-b bg-white/85 dark:bg-slate-900/85 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
-          <div className="flex items-center gap-3">
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6">
+          <div className="flex items-center gap-3.5">
             <img
               src="/logo.png"
               alt="Umiya College Logo"
-              className="h-10 w-10 object-contain drop-shadow-sm rounded-full bg-white p-0.5"
+              className="h-12 w-12 sm:h-14 sm:w-14 object-contain drop-shadow-sm rounded-full bg-white p-0.5 ring-1 ring-black/5"
             />
             <div className="leading-tight">
-              <h1 className="text-base font-bold tracking-tight text-foreground">
+              <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-foreground">
                 Umiya Arts &amp; Commerce College
               </h1>
-              <p className="text-[11px] font-medium text-emerald-600">
+              <p className="text-xs sm:text-sm font-semibold text-emerald-600 mt-0.5">
                 Shree Umiya K.V.C. Education Trust · Print Desk
               </p>
             </div>

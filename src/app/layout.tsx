@@ -33,7 +33,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased text-foreground min-h-screen relative bg-slate-50 dark:bg-slate-950`}
       >
         <div
-          className="fixed top-[68px] inset-x-0 bottom-0 -z-10 bg-[url('/bg.png')] bg-cover bg-top bg-no-repeat pointer-events-none"
+          className="fixed top-[80px] inset-x-0 bottom-0 -z-10 bg-[url('/bg.png')] bg-cover bg-top bg-no-repeat pointer-events-none"
           aria-hidden="true"
         />
         {children}

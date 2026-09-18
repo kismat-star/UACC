@@ -573,21 +573,21 @@ function Shell({
   return (
     <div className="flex min-h-screen flex-col bg-white/60 dark:bg-slate-950/70 backdrop-blur-[2px]">
       <header className="border-b bg-white/85 dark:bg-slate-900/85 backdrop-blur-md sticky top-0 z-30">
-        <div className="mx-auto flex max-w-xl items-center gap-3 px-4 py-3">
+        <div className="mx-auto flex max-w-xl items-center gap-3.5 px-4 py-3.5">
           <img
             src="/logo.png"
             alt="Umiya College Logo"
-            className="h-11 w-11 object-contain drop-shadow-sm rounded-full bg-white p-0.5"
+            className="h-12 w-12 sm:h-14 sm:w-14 object-contain drop-shadow-sm rounded-full bg-white p-0.5 ring-1 ring-black/5"
           />
           <div className="min-w-0 flex-1 leading-tight">
-            <h1 className="truncate text-sm font-bold text-foreground">
+            <h1 className="truncate text-base sm:text-lg font-extrabold text-foreground">
               Umiya Arts &amp; Commerce College
             </h1>
-            <p className="text-[11px] font-medium text-emerald-600">
-              {sessionName || "Student Print Desk"}
+            <p className="text-xs sm:text-sm font-semibold text-emerald-600 mt-0.5">
+              {sessionName || "Shree Umiya K.V.C. Education Trust · Print Desk"}
             </p>
           </div>
-          <Badge variant="outline" className="border-emerald-300 text-emerald-700 bg-emerald-50/60 font-semibold">
+          <Badge variant="outline" className="border-emerald-300 text-emerald-700 bg-emerald-50/60 font-semibold text-xs px-2.5 py-1">
             Upload
           </Badge>
         </div>

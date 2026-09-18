@@ -525,40 +525,49 @@ function QrPanel({
 
   return (
     <>
-      {/* QR Zoom Modal */}
-      {qrZoomed && activeSession && (
-        <div
-          className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-black/80 backdrop-blur-sm"
-          onClick={() => setQrZoomed(false)}
-        >
-          <div
-            className="flex flex-col items-center gap-4 rounded-2xl bg-white p-8 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <QRCodeSVG
-              value={uploadUrl}
-              size={320}
-              level="H"
-              marginSize={2}
-              fgColor="#0f172a"
-            />
-            <div className="text-center">
-              <p className="font-mono text-2xl font-bold tracking-widest text-slate-900">
-                {activeSession.code}
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Umiya Arts &amp; Commerce College · Print Desk
-              </p>
+      {/* QR Zoom Modal via Radix Dialog Portal (escapes all parent stacking contexts) */}
+      <Dialog open={qrZoomed} onOpenChange={setQrZoomed}>
+        <DialogContent className="max-w-xs sm:max-w-sm p-6 flex flex-col items-center text-center gap-4 rounded-2xl bg-white dark:bg-slate-900 border border-emerald-100 dark:border-slate-800 shadow-2xl">
+          <DialogHeader className="flex flex-col items-center gap-1">
+            <DialogTitle className="text-base sm:text-lg font-bold text-foreground">
+              Scan to Upload Documents
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Point phone camera at this QR code
+            </DialogDescription>
+          </DialogHeader>
+
+          {activeSession && (
+            <div className="flex flex-col items-center gap-3">
+              <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-black/10">
+                <QRCodeSVG
+                  value={uploadUrl}
+                  size={260}
+                  level="H"
+                  marginSize={2}
+                  fgColor="#0f172a"
+                />
+              </div>
+              <div className="text-center">
+                <p className="font-mono text-xl font-bold tracking-widest text-slate-900 dark:text-slate-100">
+                  {activeSession.code}
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Umiya Arts &amp; Commerce College · Print Desk
+                </p>
+              </div>
             </div>
-            <button
-              onClick={() => setQrZoomed(false)}
-              className="mt-1 rounded-lg bg-slate-100 px-6 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
+          )}
+
+          <Button
+            variant="outline"
+            onClick={() => setQrZoomed(false)}
+            className="w-full mt-1"
+          >
+            Close
+          </Button>
+        </DialogContent>
+      </Dialog>
 
     <Card className="flex flex-col gap-0 overflow-hidden border-emerald-100/60 dark:border-slate-800 shadow-sm bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm">
       <CardHeader className="pb-3">

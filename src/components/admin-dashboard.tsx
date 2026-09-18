@@ -33,6 +33,10 @@ import {
   Printer as PrinterIcon,
   Filter,
   ChevronDown,
+  Sun,
+  Sunrise,
+  Sunset,
+  Moon,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -349,6 +353,133 @@ function directBulkPrint(filesToPrint: FileShape[]): Promise<void> {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Greeting Card (Time-based Desk Status)                            */
+/* ------------------------------------------------------------------ */
+
+function GreetingCard() {
+  const [greeting, setGreeting] = useState<{
+    text: string;
+    subtext: string;
+    iconType: "morning" | "afternoon" | "evening" | "night";
+    dateStr: string;
+    timeStr: string;
+  } | null>(null);
+
+  useEffect(() => {
+    const update = () => {
+      const now = new Date();
+      const hour = now.getHours();
+      let text = "Good Afternoon, Admin";
+      let subtext = "Print Desk is active & ready";
+      let iconType: "morning" | "afternoon" | "evening" | "night" = "afternoon";
+
+      if (hour >= 5 && hour < 12) {
+        text = "Good Morning, Admin";
+        subtext = "Ready for morning print rush";
+        iconType = "morning";
+      } else if (hour >= 12 && hour < 17) {
+        text = "Good Afternoon, Admin";
+        subtext = "Print Desk is active & ready";
+        iconType = "afternoon";
+      } else if (hour >= 17 && hour < 21) {
+        text = "Good Evening, Admin";
+        subtext = "Wrapping up daily print jobs";
+        iconType = "evening";
+      } else {
+        text = "Working Late, Admin?";
+        subtext = "Night shift desk active";
+        iconType = "night";
+      }
+
+      const dateStr = now.toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      });
+
+      const timeStr = now.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+
+      setGreeting({ text, subtext, iconType, dateStr, timeStr });
+    };
+
+    update();
+    const timer = setInterval(update, 30000);
+    return () => clearInterval(timer);
+  }, []);
+
+  if (!greeting) {
+    return (
+      <div className="h-[68px] animate-pulse rounded-xl border border-emerald-100/60 bg-white/70 shadow-sm" />
+    );
+  }
+
+  const renderIcon = () => {
+    switch (greeting.iconType) {
+      case "morning":
+        return <Sunrise className="h-4 w-4 text-amber-500" />;
+      case "afternoon":
+        return <Sun className="h-4 w-4 text-amber-500" />;
+      case "evening":
+        return <Sunset className="h-4 w-4 text-orange-500" />;
+      case "night":
+        return <Moon className="h-4 w-4 text-indigo-400" />;
+    }
+  };
+
+  const getBgGradient = () => {
+    switch (greeting.iconType) {
+      case "morning":
+        return "from-amber-500/10 via-emerald-500/5 to-white/95";
+      case "afternoon":
+        return "from-emerald-500/10 via-teal-500/5 to-white/95";
+      case "evening":
+        return "from-orange-500/10 via-emerald-500/5 to-white/95";
+      case "night":
+        return "from-indigo-500/10 via-slate-500/5 to-white/95";
+    }
+  };
+
+  return (
+    <div
+      className={`relative overflow-hidden rounded-xl border border-emerald-100/80 bg-gradient-to-r ${getBgGradient()} p-3 shadow-sm backdrop-blur-md transition-all`}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white shadow-xs ring-1 ring-black/5">
+            {renderIcon()}
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-slate-800 tracking-tight">
+              {greeting.text}
+            </h3>
+            <p className="text-[11px] font-medium text-slate-500">
+              {greeting.subtext}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-col items-end gap-0.5 shrink-0">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 border border-emerald-200/60">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            </span>
+            Desk Ready
+          </span>
+          <span className="text-[10px] font-medium text-slate-400">
+            {greeting.dateStr} · {greeting.timeStr}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  QR Panel                                                          */
 /* ------------------------------------------------------------------ */
 
@@ -428,7 +559,7 @@ function QrPanel({
         </div>
       )}
 
-    <Card className="lg:sticky lg:top-6 flex flex-col gap-0 overflow-hidden border-emerald-100/60">
+    <Card className="flex flex-col gap-0 overflow-hidden border-emerald-100/60 shadow-sm bg-white/95 backdrop-blur-sm">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <span className="flex h-6 w-6 items-center justify-center rounded-md bg-emerald-600 text-white">
@@ -1514,15 +1645,18 @@ export function AdminDashboard() {
       {/* Main */}
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6">
         <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
-          <QrPanel
-            sessions={sessions}
-            activeSession={activeSession}
-            onSelect={setActiveId}
-            onCreate={handleCreate}
-            onUpdate={handleUpdateSession}
-            onDelete={handleDeleteSession}
-            creating={creating}
-          />
+          <div className="flex flex-col gap-3 lg:sticky lg:top-6 lg:self-start">
+            <GreetingCard />
+            <QrPanel
+              sessions={sessions}
+              activeSession={activeSession}
+              onSelect={setActiveId}
+              onCreate={handleCreate}
+              onUpdate={handleUpdateSession}
+              onDelete={handleDeleteSession}
+              creating={creating}
+            />
+          </div>
 
           {/* Files */}
           <div className="flex flex-col gap-4">

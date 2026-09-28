@@ -1201,6 +1201,7 @@ export function AdminDashboard() {
   const [settings, setSettings] = useState<SettingsShape>({
     autoDeleteAfterPrint: false,
     retentionHours: 1,
+    totalPrintsCount: 0,
   });
   const [loadingFiles, setLoadingFiles] = useState(false);
   const [creating, setCreating] = useState(false);

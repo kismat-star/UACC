@@ -159,7 +159,7 @@ export async function uploadFile(
 
 export async function getSettings(): Promise<SettingsShape> {
   const r = await fetch("/api/settings", { cache: "no-store" });
-  if (!r.ok) return { autoDeleteAfterPrint: false, retentionHours: 1 };
+  if (!r.ok) return { autoDeleteAfterPrint: false, retentionHours: 1, totalPrintsCount: 0 };
   const d = await r.json();
   // Accept both `{ settings: {...} }` and a flat object for resilience.
   const s = (d.settings ?? d) as Partial<SettingsShape>;
@@ -167,6 +167,8 @@ export async function getSettings(): Promise<SettingsShape> {
     autoDeleteAfterPrint: Boolean(s.autoDeleteAfterPrint),
     retentionHours:
       typeof s.retentionHours === "number" ? s.retentionHours : 1,
+    totalPrintsCount:
+      typeof s.totalPrintsCount === "number" ? s.totalPrintsCount : 0,
   };
 }
 

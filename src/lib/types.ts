@@ -30,6 +30,7 @@ export interface FileShape {
 export interface SettingsShape {
   autoDeleteAfterPrint: boolean;
   retentionHours: number;
+  totalPrintsCount: number;
 }
 
 type PrismaFileWithCount = PrismaFile & { _count?: { files?: number } };

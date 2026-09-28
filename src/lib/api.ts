@@ -67,11 +67,15 @@ export async function deleteFile(id: string): Promise<void> {
   if (!r.ok) throw new Error("Failed to delete file");
 }
 
-export async function markPrinted(id: string, printed: boolean): Promise<FileShape | null> {
+export async function markPrinted(
+  id: string,
+  printed: boolean,
+  recordPrint = false,
+): Promise<FileShape | null> {
   const r = await fetch(`/api/files/${id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ printed }),
+    body: JSON.stringify({ printed, recordPrint }),
   });
   if (!r.ok) throw new Error("Failed to update file");
   // If the file was auto-deleted after print, the API still returns the

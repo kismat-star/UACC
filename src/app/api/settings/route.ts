@@ -7,6 +7,7 @@ export async function GET() {
     settings: {
       autoDeleteAfterPrint: settings.autoDeleteAfterPrint,
       retentionHours: settings.retentionHours,
+      totalPrintsCount: settings.totalPrintsCount,
     },
   });
 }

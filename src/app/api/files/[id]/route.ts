@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { toFileShape, type FileShape } from "@/lib/types";
 import { deleteUpload, readUpload } from "@/lib/files";
 import { notify } from "@/lib/ws-notify";
-import { getSettings } from "@/lib/settings";
+import { getSettings, incrementPrintCount } from "@/lib/settings";
 
 /**
  * GET /api/files/[id]
@@ -144,6 +144,8 @@ export async function PATCH(
 
   const turnedPrintedOn =
     typeof data.printed === "boolean" ? data.printed === true && !before.printed : false;
+  const isReprint = Boolean(body.recordPrint && before.printed);
+  const shouldIncrement = turnedPrintedOn || isReprint;
 
   const updated = await db.file.update({
     where: { id },
@@ -164,6 +166,10 @@ export async function PATCH(
       expiresAt: true,
     },
   });
+
+  if (shouldIncrement) {
+    await incrementPrintCount(1);
+  }
 
   if (turnedPrintedOn) {
     const shape: FileShape = toFileShape(updated);

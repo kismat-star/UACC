@@ -1096,17 +1096,54 @@ function SettingsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <SettingsIcon className="h-4 w-4" />
-            Auto-delete settings
+            Print Desk Settings
           </DialogTitle>
           <DialogDescription>
-            Control how long uploaded files live before being removed.
+            Configure auto-delete preferences and view lifetime print statistics.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-5 py-2">
+
+        <div className="space-y-4 py-2">
+          {/* Total Successful Prints Card */}
+          <div className="relative overflow-hidden rounded-xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50/80 via-teal-50/30 to-white p-4 shadow-xs dark:border-emerald-900/50 dark:from-emerald-950/40 dark:via-slate-900/40 dark:to-slate-900/90">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-md shadow-emerald-600/25 ring-2 ring-emerald-500/20">
+                  <Printer className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
+                    Total Successful Prints
+                  </p>
+                  <div className="flex items-baseline gap-1.5 mt-0.5">
+                    <span className="font-mono text-2xl font-extrabold text-slate-900 dark:text-slate-100">
+                      {(settings.totalPrintsCount ?? 0).toLocaleString()}
+                    </span>
+                    <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                      {(settings.totalPrintsCount ?? 0) === 1 ? "print completed" : "prints completed"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-col items-end gap-1">
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100/90 dark:bg-emerald-900/60 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 dark:text-emerald-300 border border-emerald-300/60 dark:border-emerald-700/60">
+                  <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                  Permanent
+                </span>
+                <span className="text-[10px] text-muted-foreground">
+                  Never resets
+                </span>
+              </div>
+            </div>
+            <p className="mt-2.5 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+              Total successful print jobs dispatched from this desk. This lifetime count is permanently stored and will never be deleted, cleared, or reduced when files expire or are cleaned up.
+            </p>
+          </div>
+
           <div className="flex items-start justify-between gap-4 rounded-lg border p-3">
             <div>
               <Label className="text-sm font-medium">
@@ -1118,6 +1155,7 @@ function SettingsDialog({
             </div>
             <Switch checked={autoDelete} onCheckedChange={setAutoDelete} />
           </div>
+
           <div className="rounded-lg border p-3">
             <Label className="text-sm font-medium">Auto-expire uploads</Label>
             <p className="mt-0.5 text-xs text-muted-foreground">
@@ -1361,7 +1399,7 @@ export function AdminDashboard() {
     try {
       await directPrintFile(file);
 
-      const updated = await markPrinted(file.id, true);
+      const updated = await markPrinted(file.id, true, true);
       if (updated) {
         setFiles((prev) =>
           prev.map((f) => (f.id === file.id ? updated : f)),
@@ -1370,6 +1408,7 @@ export function AdminDashboard() {
         setFiles((prev) => prev.filter((f) => f.id !== file.id));
         toast({ title: "Printed & auto-deleted", description: file.filename });
       }
+      refreshSettings();
     } catch {
       /* ignore */
     } finally {
@@ -1463,13 +1502,14 @@ export function AdminDashboard() {
     (async () => {
       for (const id of ids) {
         try {
-          await markPrinted(id, true);
+          await markPrinted(id, true, true);
         } catch {
           /* ignore */
         }
       }
       // Refresh so badges update / auto-deleted ones drop.
       refreshFiles();
+      refreshSettings();
     })();
   };
 
@@ -1643,7 +1683,10 @@ export function AdminDashboard() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setSettingsOpen(true)}
+              onClick={() => {
+                refreshSettings();
+                setSettingsOpen(true);
+              }}
               title="Settings"
             >
               <SettingsIcon className="h-4 w-4" />
@@ -1929,6 +1972,10 @@ export function AdminDashboard() {
               <b className="text-emerald-600">{printedCount}</b> printed
             </span>
             <span className="hidden items-center gap-1.5 sm:flex">
+              <Printer className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+              Total prints: <b className="text-slate-800 dark:text-slate-200">{(settings.totalPrintsCount ?? 0).toLocaleString()}</b>
+            </span>
+            <span className="hidden items-center gap-1.5 md:flex">
               <Clock className="h-3 w-3" />
               {settings.autoDeleteAfterPrint
                 ? "Auto-delete after print: on"

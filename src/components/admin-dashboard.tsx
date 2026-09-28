@@ -93,7 +93,6 @@ import {
   printAllUrl,
   printPosterUrl,
   printUrl,
-  recordPrintCount,
   runCleanup,
   updateSession,
   updateSettings,
@@ -1399,20 +1398,21 @@ export function AdminDashboard() {
   const handlePrint = async (file: FileShape) => {
     setPrintingId(file.id);
 
-    // 1. Instantly update total prints count in UI
-    setSettings((prev) => ({
-      ...prev,
-      totalPrintsCount: (prev.totalPrintsCount ?? 0) + 1,
-    }));
+    const isFirstPrint = !file.printed;
 
-    // 2. Persist increment to database immediately
-    void recordPrintCount(1);
+    // Only update total prints count on the FIRST print (reprints are not counted)
+    if (isFirstPrint) {
+      setSettings((prev) => ({
+        ...prev,
+        totalPrintsCount: (prev.totalPrintsCount ?? 0) + 1,
+      }));
+    }
 
     try {
-      // 3. Mark file as printed
-      const markPromise = markPrinted(file.id, true, true);
+      // Mark file as printed on backend
+      const markPromise = markPrinted(file.id, true);
 
-      // 4. Trigger print
+      // Trigger direct browser print
       await directPrintFile(file);
 
       const updated = await markPromise;
@@ -1513,14 +1513,15 @@ export function AdminDashboard() {
 
     const selectedFiles = files.filter((f) => selected.has(f.id));
 
-    // 1. Instantly update total prints count in UI by batch size
-    setSettings((prev) => ({
-      ...prev,
-      totalPrintsCount: (prev.totalPrintsCount ?? 0) + selectedFiles.length,
-    }));
+    const unprintedCount = selectedFiles.filter((f) => !f.printed).length;
 
-    // 2. Persist increment to database immediately
-    void recordPrintCount(selectedFiles.length);
+    // 1. Instantly update total prints count in UI for newly printed files only
+    if (unprintedCount > 0) {
+      setSettings((prev) => ({
+        ...prev,
+        totalPrintsCount: (prev.totalPrintsCount ?? 0) + unprintedCount,
+      }));
+    }
 
     await directBulkPrint(selectedFiles);
 
@@ -1528,7 +1529,7 @@ export function AdminDashboard() {
     (async () => {
       for (const id of ids) {
         try {
-          await markPrinted(id, true, true);
+          await markPrinted(id, true);
         } catch {
           /* ignore */
         }

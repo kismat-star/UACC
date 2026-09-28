@@ -144,8 +144,6 @@ export async function PATCH(
 
   const turnedPrintedOn =
     typeof data.printed === "boolean" ? data.printed === true && !before.printed : false;
-  const isReprint = Boolean(body.recordPrint && before.printed);
-  const shouldIncrement = turnedPrintedOn || isReprint;
 
   const updated = await db.file.update({
     where: { id },
@@ -167,11 +165,8 @@ export async function PATCH(
     },
   });
 
-  if (shouldIncrement) {
-    await incrementPrintCount(1);
-  }
-
   if (turnedPrintedOn) {
+    await incrementPrintCount(1);
     const shape: FileShape = toFileShape(updated);
     void notify("file-printed", { file: shape });
 

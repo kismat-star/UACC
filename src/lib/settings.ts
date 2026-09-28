@@ -19,6 +19,15 @@ const CACHE_TTL_MS = 60_000; // 60 seconds
 export async function getSettings(): Promise<SettingsShape> {
   const now = Date.now();
   if (cachedSettings && now < cacheExpiresAt) {
+    const printRow = await db.setting
+      .findUnique({ where: { id: KEY_TOTAL_PRINTS } })
+      .catch(() => null);
+    if (printRow) {
+      const parsed = Number.parseInt(printRow.value, 10);
+      if (Number.isFinite(parsed)) {
+        cachedSettings.totalPrintsCount = parsed;
+      }
+    }
     return cachedSettings;
   }
 
@@ -104,6 +113,7 @@ export async function incrementPrintCount(amount = 1): Promise<number> {
     if (cachedSettings) {
       cachedSettings.totalPrintsCount = newVal;
     }
+    cacheExpiresAt = 0;
     return newVal;
   } catch (err) {
     console.error("[settings] incrementPrintCount failed:", err);

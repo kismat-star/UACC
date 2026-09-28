@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSettings, updateSettings } from "@/lib/settings";
+import { getSettings, updateSettings, incrementPrintCount } from "@/lib/settings";
 
 export async function GET() {
   const settings = await getSettings();
@@ -10,6 +10,20 @@ export async function GET() {
       totalPrintsCount: settings.totalPrintsCount,
     },
   });
+}
+
+export async function POST(req: Request) {
+  let count = 1;
+  try {
+    const body = await req.json();
+    if (typeof body.count === "number" && Number.isFinite(body.count) && body.count > 0) {
+      count = Math.floor(body.count);
+    }
+  } catch {
+    // fallback count 1
+  }
+  const total = await incrementPrintCount(count);
+  return NextResponse.json({ totalPrintsCount: total });
 }
 
 export async function PATCH(req: Request) {

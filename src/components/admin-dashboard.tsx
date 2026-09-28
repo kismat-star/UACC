@@ -93,6 +93,7 @@ import {
   printAllUrl,
   printPosterUrl,
   printUrl,
+  recordPrintCount,
   runCleanup,
   updateSession,
   updateSettings,
@@ -1396,10 +1397,24 @@ export function AdminDashboard() {
 
   const handlePrint = async (file: FileShape) => {
     setPrintingId(file.id);
+
+    // 1. Instantly update total prints count in UI
+    setSettings((prev) => ({
+      ...prev,
+      totalPrintsCount: (prev.totalPrintsCount ?? 0) + 1,
+    }));
+
+    // 2. Persist increment to database immediately
+    void recordPrintCount(1);
+
     try {
+      // 3. Mark file as printed
+      const markPromise = markPrinted(file.id, true, true);
+
+      // 4. Trigger print
       await directPrintFile(file);
 
-      const updated = await markPrinted(file.id, true, true);
+      const updated = await markPromise;
       if (updated) {
         setFiles((prev) =>
           prev.map((f) => (f.id === file.id ? updated : f)),
@@ -1496,6 +1511,16 @@ export function AdminDashboard() {
     if (ids.length === 0) return;
 
     const selectedFiles = files.filter((f) => selected.has(f.id));
+
+    // 1. Instantly update total prints count in UI by batch size
+    setSettings((prev) => ({
+      ...prev,
+      totalPrintsCount: (prev.totalPrintsCount ?? 0) + selectedFiles.length,
+    }));
+
+    // 2. Persist increment to database immediately
+    void recordPrintCount(selectedFiles.length);
+
     await directBulkPrint(selectedFiles);
 
     // Mark them printed (best-effort, sequential).

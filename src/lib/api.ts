@@ -84,6 +84,23 @@ export async function markPrinted(
   return (d.file as FileShape | null) ?? null;
 }
 
+export async function recordPrintCount(count = 1): Promise<number> {
+  try {
+    const r = await fetch("/api/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ count }),
+    });
+    if (r.ok) {
+      const d = await r.json();
+      return typeof d.totalPrintsCount === "number" ? d.totalPrintsCount : 0;
+    }
+  } catch {
+    /* ignore */
+  }
+  return 0;
+}
+
 export function fileUrl(id: string, download = false): string {
   return `/api/files/${id}${download ? "?download=1" : ""}`;
 }

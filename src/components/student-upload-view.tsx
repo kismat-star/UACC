@@ -41,7 +41,7 @@ interface PendingFile {
 }
 
 const ACCEPT = "*/*"; // allow any file type
-const MAX_SIZE = 15 * 1024 * 1024; // 15MB — matches backend
+const MAX_SIZE = 50 * 1024 * 1024; // 50MB — matches backend
 
 export function StudentUploadView({ code }: { code: string }) {
   const { toast } = useToast();
@@ -148,7 +148,7 @@ export function StudentUploadView({ code }: { code: string }) {
         if (f.size > MAX_SIZE) {
           toast({
             title: "File too large",
-            description: `${f.name} is ${formatBytes(f.size)} (max 15MB).`,
+            description: `${f.name} is ${formatBytes(f.size)} (max 50MB).`,
             variant: "destructive",
           });
           continue;
@@ -321,7 +321,7 @@ export function StudentUploadView({ code }: { code: string }) {
         <div>
           <p className="text-base font-semibold">Add your file(s)</p>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Images or PDF · up to 15 MB each
+            Images or PDF · up to 50 MB each
           </p>
         </div>
         <input

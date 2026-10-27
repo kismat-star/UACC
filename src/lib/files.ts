@@ -5,7 +5,7 @@ import { randomUUID } from "node:crypto";
 import { put, del } from "@vercel/blob";
 import type { FileType } from "@/lib/types";
 
-export const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15 MB
+export const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
 export function isVercelBlobEnabled(): boolean {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN);

@@ -117,7 +117,7 @@ export async function GET(
       <ol class="steps">
         <li class="step"><span class="n">1</span><span class="t"><b>Open your camera</b>Point it at the QR code.</span></li>
         <li class="step"><span class="n">2</span><span class="t"><b>Tap the link</b>that appears on your screen.</span></li>
-        <li class="step"><span class="n">3</span><span class="t"><b>Add your name</b>and pick a photo or PDF (max 15 MB).</span></li>
+        <li class="step"><span class="n">3</span><span class="t"><b>Add your name</b>and pick a photo or PDF (max 50 MB).</span></li>
         <li class="step"><span class="n">4</span><span class="t"><b>Press Send.</b>Your file reaches the teacher instantly.</span></li>
         <li class="step"><span class="n">5</span><span class="t"><b>Done!</b>Files are deleted automatically after use.</span></li>
       </ol>

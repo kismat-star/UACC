@@ -155,6 +155,26 @@ export async function uploadFile(
   });
 }
 
+export async function shareContent(payload: {
+  code: string;
+  type: "url" | "text";
+  content: string;
+  title?: string;
+  studentName?: string;
+}): Promise<FileShape> {
+  const r = await fetch("/api/share", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!r.ok) {
+    const e = await r.json().catch(() => ({ error: "Failed to share" }));
+    throw new Error(e.error || "Failed to share");
+  }
+  const d = await r.json();
+  return d.file as FileShape;
+}
+
 /* ---------- Settings / cleanup ---------- */
 
 export async function getSettings(): Promise<SettingsShape> {

@@ -1,6 +1,6 @@
 import type { File as PrismaFile, Session as PrismaSession } from "@prisma/client";
 
-export type FileType = "image" | "pdf" | "other";
+export type FileType = "image" | "pdf" | "url" | "text" | "other";
 
 export interface SessionShape {
   id: string;
@@ -25,6 +25,7 @@ export interface FileShape {
   printedAt: string | null;
   printed: boolean;
   expiresAt: string | null;
+  content?: string | null;
 }
 
 export interface SettingsShape {
@@ -37,17 +38,24 @@ type PrismaFileWithCount = PrismaFile & { _count?: { files?: number } };
 
 /**
  * Map a Prisma File row into the API-safe FileShape.
- * Handles Date -> ISO conversion. fileType is constrained to "image" | "pdf".
+ * Handles Date -> ISO conversion. Supports image, pdf, url, text.
  */
 export function toFileShape(
   prismaFile: Omit<PrismaFile, "data"> & { data?: unknown },
 ): FileShape {
-  const fileType: FileType =
-    prismaFile.fileType === "image" || prismaFile.fileType === "pdf"
-      ? (prismaFile.fileType as FileType)
-      : prismaFile.mimeType.startsWith("image/")
-        ? "image"
-        : "pdf";
+  let fileType: FileType = "other";
+  if (
+    prismaFile.fileType === "image" ||
+    prismaFile.fileType === "pdf" ||
+    prismaFile.fileType === "url" ||
+    prismaFile.fileType === "text"
+  ) {
+    fileType = prismaFile.fileType as FileType;
+  } else if (prismaFile.mimeType.startsWith("image/")) {
+    fileType = "image";
+  } else if (prismaFile.mimeType === "application/pdf") {
+    fileType = "pdf";
+  }
 
   return {
     id: prismaFile.id,
@@ -63,6 +71,10 @@ export function toFileShape(
     printedAt: prismaFile.printedAt ? prismaFile.printedAt.toISOString() : null,
     printed: prismaFile.printed,
     expiresAt: prismaFile.expiresAt ? prismaFile.expiresAt.toISOString() : null,
+    content:
+      fileType === "url" || fileType === "text"
+        ? prismaFile.storedName
+        : null,
   };
 }
 

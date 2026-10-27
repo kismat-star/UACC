@@ -37,10 +37,15 @@ import {
   Sunrise,
   Sunset,
   Moon,
+  Link as LinkIcon,
+  MessageSquare,
+  Send,
+  Share2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Card,
@@ -94,6 +99,7 @@ import {
   printPosterUrl,
   printUrl,
   runCleanup,
+  shareContent,
   updateSession,
   updateSettings,
 } from "@/lib/api";
@@ -1223,6 +1229,17 @@ export function AdminDashboard() {
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkWorking, setBulkWorking] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Quick share states for admin
+  const [adminUrl, setAdminUrl] = useState("");
+  const [adminUrlTitle, setAdminUrlTitle] = useState("");
+  const [showAddUrl, setShowAddUrl] = useState(false);
+  const [savingAdminUrl, setSavingAdminUrl] = useState(false);
+
+  const [adminNote, setAdminNote] = useState("");
+  const [showAddNote, setShowAddNote] = useState(false);
+  const [savingAdminNote, setSavingAdminNote] = useState(false);
 
   const activeSession = useMemo(
     () => sessions.find((s) => s.id === activeId) ?? null,
@@ -1576,8 +1593,90 @@ export function AdminDashboard() {
 
   /* ---- Derived: filtered + sorted files ---- */
 
+  const docFiles = useMemo(
+    () => files.filter((f) => f.fileType !== "url" && f.fileType !== "text"),
+    [files],
+  );
+
+  const urlFiles = useMemo(
+    () => files.filter((f) => f.fileType === "url"),
+    [files],
+  );
+
+  const textFiles = useMemo(
+    () => files.filter((f) => f.fileType === "text"),
+    [files],
+  );
+
+  const handleCopy = (text: string, id: string) => {
+    try {
+      navigator.clipboard.writeText(text);
+      setCopiedId(id);
+      toast({ title: "Copied to clipboard" });
+      setTimeout(() => {
+        setCopiedId((curr) => (curr === id ? null : curr));
+      }, 2000);
+    } catch {
+      toast({ title: "Could not copy", variant: "destructive" });
+    }
+  };
+
+  const handleAdminShareUrl = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeSession || !adminUrl.trim()) return;
+    setSavingAdminUrl(true);
+    try {
+      const created = await shareContent({
+        code: activeSession.code,
+        type: "url",
+        content: adminUrl.trim(),
+        title: adminUrlTitle.trim() || undefined,
+        studentName: "Admin",
+      });
+      setFiles((prev) => [created, ...prev]);
+      setAdminUrl("");
+      setAdminUrlTitle("");
+      setShowAddUrl(false);
+      toast({ title: "Link shared to session" });
+    } catch (e) {
+      toast({
+        title: "Failed to share link",
+        description: (e as Error).message,
+        variant: "destructive",
+      });
+    } finally {
+      setSavingAdminUrl(false);
+    }
+  };
+
+  const handleAdminShareNote = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeSession || !adminNote.trim()) return;
+    setSavingAdminNote(true);
+    try {
+      const created = await shareContent({
+        code: activeSession.code,
+        type: "text",
+        content: adminNote.trim(),
+        studentName: "Admin",
+      });
+      setFiles((prev) => [created, ...prev]);
+      setAdminNote("");
+      setShowAddNote(false);
+      toast({ title: "Note shared to session" });
+    } catch (e) {
+      toast({
+        title: "Failed to share note",
+        description: (e as Error).message,
+        variant: "destructive",
+      });
+    } finally {
+      setSavingAdminNote(false);
+    }
+  };
+
   const visibleFiles = useMemo(() => {
-    let list = files;
+    let list = docFiles;
     const q = search.trim().toLowerCase();
     if (q) {
       list = list.filter(
@@ -1606,7 +1705,7 @@ export function AdminDashboard() {
         (a.studentName || "z").localeCompare(b.studentName || "z"),
       );
     return sorted;
-  }, [files, search, filter, sort]);
+  }, [docFiles, search, filter, sort]);
 
   const totalSize = useMemo(
     () => files.reduce((acc, f) => acc + f.size, 0),
@@ -1757,7 +1856,7 @@ export function AdminDashboard() {
                 <h2 className="flex items-center gap-2 text-lg font-semibold">
                   Received files
                   {activeSession && (
-                    <Badge variant="secondary">{files.length}</Badge>
+                    <Badge variant="secondary">{docFiles.length}</Badge>
                   )}
                 </h2>
                 <p className="text-xs text-muted-foreground">
@@ -1776,7 +1875,7 @@ export function AdminDashboard() {
                     setSelectMode((v) => !v);
                     if (selectMode) setSelected(new Set());
                   }}
-                  disabled={files.length === 0}
+                  disabled={docFiles.length === 0}
                   className={selectMode ? "bg-emerald-600 text-white hover:bg-emerald-700" : ""}
                 >
                   <Layers className="mr-2 h-3.5 w-3.5" />
@@ -1800,7 +1899,7 @@ export function AdminDashboard() {
 
             {/* Bulk action bar */}
             <AnimatePresence>
-              {selectMode && files.length > 0 ? (
+              {selectMode && docFiles.length > 0 ? (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
@@ -1848,7 +1947,7 @@ export function AdminDashboard() {
             </AnimatePresence>
 
             {/* Search + filter + sort */}
-            {files.length > 0 && (
+            {docFiles.length > 0 && (
               <div className="flex flex-wrap items-center gap-2">
                 <div className="relative min-w-[180px] flex-1">
                   <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -1910,7 +2009,7 @@ export function AdminDashboard() {
                   No session selected.
                 </p>
               </div>
-            ) : files.length === 0 ? (
+            ) : docFiles.length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed py-20 text-center">
                 <motion.div
                   animate={{ y: [0, -6, 0] }}
@@ -1973,6 +2072,271 @@ export function AdminDashboard() {
               </ScrollArea>
             )}
 
+            {/* Two small boxes under photo upload: 1) Shared URLs/Links, 2) Shared Notes/Text */}
+            <div className="grid gap-4 md:grid-cols-2 pt-1">
+              {/* Box 1: Shared URLs / Links */}
+              <Card className="flex flex-col border border-border/80 shadow-xs">
+                <CardHeader className="p-3.5 pb-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
+                        <LinkIcon className="h-3.5 w-3.5" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
+                          Shared Links & URLs
+                          <Badge variant="secondary" className="h-5 px-1.5 text-[11px] font-normal">
+                            {urlFiles.length}
+                          </Badge>
+                        </CardTitle>
+                        <CardDescription className="text-[11px]">
+                          Web links, Google Drive, or portals
+                        </CardDescription>
+                      </div>
+                    </div>
+                    {activeSession && !activeSession.closed && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/40"
+                        onClick={() => setShowAddUrl((v) => !v)}
+                      >
+                        <Plus className="mr-1 h-3 w-3" />
+                        {showAddUrl ? "Cancel" : "Add link"}
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Inline quick add link for admin */}
+                  <AnimatePresence>
+                    {showAddUrl && (
+                      <motion.form
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        onSubmit={handleAdminShareUrl}
+                        className="mt-2.5 flex flex-col gap-2 pt-2 border-t border-border/60"
+                      >
+                        <Input
+                          placeholder="Paste URL (https://...)"
+                          value={adminUrl}
+                          onChange={(e) => setAdminUrl(e.target.value)}
+                          disabled={savingAdminUrl}
+                          className="h-7 text-xs bg-background"
+                          autoFocus
+                        />
+                        <div className="flex items-center gap-2">
+                          <Input
+                            placeholder="Title / Label (optional)"
+                            value={adminUrlTitle}
+                            onChange={(e) => setAdminUrlTitle(e.target.value)}
+                            disabled={savingAdminUrl}
+                            className="h-7 text-[11px] bg-background flex-1"
+                          />
+                          <Button
+                            type="submit"
+                            size="sm"
+                            disabled={savingAdminUrl || !adminUrl.trim()}
+                            className="h-7 px-3 text-xs bg-blue-600 text-white hover:bg-blue-700 shrink-0"
+                          >
+                            {savingAdminUrl ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              "Share"
+                            )}
+                          </Button>
+                        </div>
+                      </motion.form>
+                    )}
+                  </AnimatePresence>
+                </CardHeader>
+                <CardContent className="p-3.5 pt-0 flex-1 flex flex-col">
+                  {urlFiles.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-6 text-center text-muted-foreground/60 border border-dashed rounded-lg bg-muted/10 my-auto">
+                      <LinkIcon className="h-6 w-6 mb-1 opacity-40" />
+                      <p className="text-xs">No links shared yet</p>
+                      <p className="text-[10px] text-muted-foreground/60">Links submitted via upload page will appear here</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                      {urlFiles.map((f) => (
+                        <div
+                          key={f.id}
+                          className="flex items-start justify-between gap-2 p-2.5 rounded-lg border bg-card hover:bg-muted/30 transition-colors text-xs"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <a
+                              href={f.storedName}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-medium text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 break-all"
+                            >
+                              <span className="truncate">{f.filename || f.storedName}</span>
+                              <ExternalLink className="h-3 w-3 shrink-0" />
+                            </a>
+                            <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
+                              {f.storedName}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground/70 mt-1">
+                              {f.studentName ? `From: ${f.studentName} · ` : ""}
+                              {timeAgo(f.createdAt)}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                              title="Copy link"
+                              onClick={() => handleCopy(f.storedName, f.id)}
+                            >
+                              {copiedId === f.id ? (
+                                <Check className="h-3.5 w-3.5 text-emerald-600" />
+                              ) : (
+                                <Copy className="h-3.5 w-3.5" />
+                              )}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                              title="Delete link"
+                              onClick={() => handleDeleteFile(f.id)}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Box 2: Shared Notes & Text */}
+              <Card className="flex flex-col border border-border/80 shadow-xs">
+                <CardHeader className="p-3.5 pb-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-100 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400">
+                        <MessageSquare className="h-3.5 w-3.5" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
+                          Shared Notes & Text
+                          <Badge variant="secondary" className="h-5 px-1.5 text-[11px] font-normal">
+                            {textFiles.length}
+                          </Badge>
+                        </CardTitle>
+                        <CardDescription className="text-[11px]">
+                          Quick messages, notices, and memos
+                        </CardDescription>
+                      </div>
+                    </div>
+                    {activeSession && !activeSession.closed && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:hover:bg-purple-950/40"
+                        onClick={() => setShowAddNote((v) => !v)}
+                      >
+                        <Plus className="mr-1 h-3 w-3" />
+                        {showAddNote ? "Cancel" : "Add note"}
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Inline quick add note for admin */}
+                  <AnimatePresence>
+                    {showAddNote && (
+                      <motion.form
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        onSubmit={handleAdminShareNote}
+                        className="mt-2.5 flex flex-col gap-2 pt-2 border-t border-border/60"
+                      >
+                        <Textarea
+                          placeholder="Type message, note, or announcement..."
+                          value={adminNote}
+                          onChange={(e) => setAdminNote(e.target.value)}
+                          disabled={savingAdminNote}
+                          rows={2}
+                          className="text-xs bg-background resize-none"
+                          autoFocus
+                        />
+                        <div className="flex justify-end">
+                          <Button
+                            type="submit"
+                            size="sm"
+                            disabled={savingAdminNote || !adminNote.trim()}
+                            className="h-7 px-3 text-xs bg-purple-600 text-white hover:bg-purple-700"
+                          >
+                            {savingAdminNote ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              "Share Note"
+                            )}
+                          </Button>
+                        </div>
+                      </motion.form>
+                    )}
+                  </AnimatePresence>
+                </CardHeader>
+                <CardContent className="p-3.5 pt-0 flex-1 flex flex-col">
+                  {textFiles.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-6 text-center text-muted-foreground/60 border border-dashed rounded-lg bg-muted/10 my-auto">
+                      <MessageSquare className="h-6 w-6 mb-1 opacity-40" />
+                      <p className="text-xs">No notes shared yet</p>
+                      <p className="text-[10px] text-muted-foreground/60">Notes submitted via upload page will appear here</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                      {textFiles.map((f) => (
+                        <div
+                          key={f.id}
+                          className="flex items-start justify-between gap-2 p-2.5 rounded-lg border bg-card hover:bg-muted/30 transition-colors text-xs"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <p className="whitespace-pre-wrap font-sans text-xs text-foreground/90 leading-relaxed select-text">
+                              {f.storedName}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground/70 mt-1.5">
+                              {f.studentName ? `From: ${f.studentName} · ` : ""}
+                              {timeAgo(f.createdAt)}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                              title="Copy text"
+                              onClick={() => handleCopy(f.storedName, f.id)}
+                            >
+                              {copiedId === f.id ? (
+                                <Check className="h-3.5 w-3.5 text-emerald-600" />
+                              ) : (
+                                <Copy className="h-3.5 w-3.5" />
+                              )}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                              title="Delete note"
+                              onClick={() => handleDeleteFile(f.id)}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
 
           </div>
         </div>
@@ -1984,8 +2348,20 @@ export function AdminDashboard() {
           <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-muted-foreground">
             <span className="flex items-center gap-1.5">
               <Layers className="h-3 w-3" />
-              <b className="text-foreground">{files.length}</b> files
+              <b className="text-foreground">{docFiles.length}</b> files
             </span>
+            {urlFiles.length > 0 && (
+              <span className="flex items-center gap-1.5">
+                <LinkIcon className="h-3 w-3 text-blue-500" />
+                <b className="text-foreground">{urlFiles.length}</b> links
+              </span>
+            )}
+            {textFiles.length > 0 && (
+              <span className="flex items-center gap-1.5">
+                <MessageSquare className="h-3 w-3 text-purple-500" />
+                <b className="text-foreground">{textFiles.length}</b> notes
+              </span>
+            )}
             <span className="flex items-center gap-1.5">
               <Users className="h-3 w-3" />
               <b className="text-foreground">{uniqueStudents}</b> students

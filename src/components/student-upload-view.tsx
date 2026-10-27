@@ -14,10 +14,15 @@ import {
   User,
   Lock,
   ScanLine,
+  Link as LinkIcon,
+  MessageSquare,
+  Send,
+  Share2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Card,
@@ -26,7 +31,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { getSessionByCode, uploadFile } from "@/lib/api";
+import { getSessionByCode, uploadFile, shareContent } from "@/lib/api";
 import { formatBytes } from "@/lib/format";
 import type { SessionShape } from "@/lib/types";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -53,6 +58,12 @@ export function StudentUploadView({ code }: { code: string }) {
   const [pending, setPending] = useState<PendingFile[]>([]);
   const [dragging, setDragging] = useState(false);
   const [allDone, setAllDone] = useState(false);
+
+  const [urlInput, setUrlInput] = useState("");
+  const [urlTitle, setUrlTitle] = useState("");
+  const [sharingUrl, setSharingUrl] = useState(false);
+  const [textInput, setTextInput] = useState("");
+  const [sharingText, setSharingText] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -256,6 +267,62 @@ export function StudentUploadView({ code }: { code: string }) {
     pending.forEach((p) => p.previewUrl && URL.revokeObjectURL(p.previewUrl));
     setPending([]);
     setAllDone(false);
+  };
+
+  const handleShareUrl = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!urlInput.trim()) return;
+    setSharingUrl(true);
+    try {
+      await shareContent({
+        code,
+        type: "url",
+        content: urlInput.trim(),
+        title: urlTitle.trim() || undefined,
+        studentName: studentName.trim() || undefined,
+      });
+      setUrlInput("");
+      setUrlTitle("");
+      toast({
+        title: "Link shared successfully!",
+        description: "Your link is now available to the admin.",
+      });
+    } catch (err) {
+      toast({
+        title: "Failed to share link",
+        description: (err as Error).message,
+        variant: "destructive",
+      });
+    } finally {
+      setSharingUrl(false);
+    }
+  };
+
+  const handleShareText = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!textInput.trim()) return;
+    setSharingText(true);
+    try {
+      await shareContent({
+        code,
+        type: "text",
+        content: textInput.trim(),
+        studentName: studentName.trim() || undefined,
+      });
+      setTextInput("");
+      toast({
+        title: "Note shared successfully!",
+        description: "Your note is now available to the admin.",
+      });
+    } catch (err) {
+      toast({
+        title: "Failed to share note",
+        description: (err as Error).message,
+        variant: "destructive",
+      });
+    } finally {
+      setSharingText(false);
+    }
   };
 
   /* ---- Render states ---- */
@@ -472,6 +539,103 @@ export function StudentUploadView({ code }: { code: string }) {
           </CardContent>
         </Card>
       )}
+      {/* Quick Share Options: URL/Link and Text/Note */}
+      <div className="mt-8 space-y-4 pt-6 border-t border-border/80">
+        <div className="flex items-center gap-2">
+          <div className="h-px flex-1 bg-border/60" />
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+            <Share2 className="h-3.5 w-3.5" />
+            Share Links & Notes
+          </span>
+          <div className="h-px flex-1 bg-border/60" />
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          {/* Box 1: Share URL / Link */}
+          <Card className="border border-border/70 shadow-xs">
+            <CardContent className="p-4 flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
+                  <LinkIcon className="h-3.5 w-3.5" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-semibold">Share URL / Link</h3>
+                  <p className="text-[11px] text-muted-foreground">Drive link, website, or form</p>
+                </div>
+              </div>
+
+              <form onSubmit={handleShareUrl} className="flex flex-col gap-2">
+                <Input
+                  placeholder="https://..."
+                  value={urlInput}
+                  onChange={(e) => setUrlInput(e.target.value)}
+                  disabled={closed || sharingUrl}
+                  className="h-8 text-xs bg-background"
+                />
+                <Input
+                  placeholder="Link title or note (optional)"
+                  value={urlTitle}
+                  onChange={(e) => setUrlTitle(e.target.value)}
+                  disabled={closed || sharingUrl}
+                  className="h-7 text-[11px] bg-background"
+                />
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={closed || sharingUrl || !urlInput.trim()}
+                  className="h-8 bg-blue-600 hover:bg-blue-700 text-white text-xs mt-1"
+                >
+                  {sharingUrl ? (
+                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Send className="mr-1.5 h-3.5 w-3.5" />
+                  )}
+                  Send Link
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          {/* Box 2: Share Text / Note */}
+          <Card className="border border-border/70 shadow-xs">
+            <CardContent className="p-4 flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-100 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400">
+                  <MessageSquare className="h-3.5 w-3.5" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-semibold">Share Text / Note</h3>
+                  <p className="text-[11px] text-muted-foreground">Quick message, memo, or notice</p>
+                </div>
+              </div>
+
+              <form onSubmit={handleShareText} className="flex flex-col gap-2">
+                <Textarea
+                  placeholder="Write or paste your text/note here..."
+                  value={textInput}
+                  onChange={(e) => setTextInput(e.target.value)}
+                  disabled={closed || sharingText}
+                  rows={3}
+                  className="text-xs bg-background resize-none"
+                />
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={closed || sharingText || !textInput.trim()}
+                  className="h-8 bg-purple-600 hover:bg-purple-700 text-white text-xs mt-1"
+                >
+                  {sharingText ? (
+                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Send className="mr-1.5 h-3.5 w-3.5" />
+                  )}
+                  Send Note
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </Shell>
   );
 }
